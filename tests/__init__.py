@@ -41,12 +41,12 @@ class BasicTypesTest(BaseModel):
 
 
 @toSurql("complex_types")
-class complexObjectsTest(BaseModel):
+class complexRecordsTest(BaseModel):
     """
-        test all schemafull objects types parsing
+        test all records types parsing
     """
-    complex_obj: BasicTypesTest
-    complex_obj_arr: list[BasicTypesTest]
+    complex_record: BasicTypesTest
+    complex_record_arr: list[BasicTypesTest]
 
 def main():
     for table in Mapper.tables:

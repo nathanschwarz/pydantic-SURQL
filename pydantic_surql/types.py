@@ -2,6 +2,7 @@ from typing import List, Type, Set, Union
 from enum import Enum
 from typing import Optional
 from pydantic import BaseModel
+from typing_extensions import TypeAliasType
 
 SurQLNullable = Type[None]
 
@@ -38,9 +39,12 @@ COMPLEX_TYPES = [
     SurQLType.RECORD,
 ]
 
+RecursiveType = TypeAliasType('RecursiveType', List[Union[SurQLType, 'SurQLField', 'RecursiveType']])
+
 class SurQLField(BaseModel):
     name: Optional[str]
-    types: Union[list[SurQLType | list[SurQLType]], 'SurQLField']
+    types: RecursiveType
+    recordLink: Optional[str] = None
 
     def to_surql(self, table_name: str) -> List[str]:
         fieldSurql = ["TYPE"]

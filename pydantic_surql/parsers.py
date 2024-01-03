@@ -41,8 +41,10 @@ def parseType(_type: Type):
                 res.append(parseType(arg))
         return res
     if (_type.__is_surql_collection__):
-        return SurQLType.RECORD
-    return SurQLType.OBJECT
+        test = SurQLField(name=None, types=[SurQLType.RECORD], recordLink=_type.__surql_table_name__)
+        print(test)
+        return test
+    return parseField(name=None, annotation=_type)
 
 def parseUnionType(type: UnionType):
     types = []
@@ -69,5 +71,6 @@ def parseField(name: Optional[str], annotation: Type):
 def parseFields(model: BaseModel):
     fields = []
     for field_name, field in model.model_fields.items():
+        print(field_name)
         fields.append(parseField(field_name, field.annotation))
     return fields
