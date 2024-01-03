@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
-from ..pydantic_surql import toSurql
-from ..pydantic_surql.types import SurQLNullable
+from pydantic_surql import toSurql, Mapper
+from pydantic_surql.types import SurQLNullable
 from pydantic import BaseModel
 
 @toSurql("basic_types")
@@ -31,4 +31,5 @@ class BasicArrayTypesTest(BaseModel):
     t_date: list[datetime]
 
 def main():
-    print("testing parsing")
+    for table in Mapper.tables:
+        print(table.model_dump_json(indent=4))

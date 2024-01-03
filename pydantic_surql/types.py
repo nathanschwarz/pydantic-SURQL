@@ -22,11 +22,14 @@ class SurQLField(BaseModel):
     types: list[SurQLType]
     subDef: Optional[list[SurQLType] | SurQLType | SchemaType | 'SurQLField']
 
+    __hash__ = object.__hash__
+
 SurQLField.model_rebuild()
 
 class SurQLTable(BaseModel):
     name: str
     fields: Set[SurQLField]
+    __hash__ = object.__hash__
 
 class SurQLMapper(BaseModel):
     tables: Set[SurQLTable]
