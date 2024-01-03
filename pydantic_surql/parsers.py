@@ -1,6 +1,8 @@
-from typing import Any, Optional, Type, Union, get_origin, get_args
+from typing import Any, Optional, Type, Union, get_origin, get_args, get_type_hints
 from types import UnionType, NoneType, GenericAlias
-from .types import SchemaType, SurQLField, SurQLType, SurQLNullable
+
+from pydantic import BaseModel
+from .types import SurQLField, SurQLType, SurQLNullable
 from datetime import datetime
 
 def parseSimpleTypes(_type: Type):
@@ -15,7 +17,7 @@ def parseSimpleTypes(_type: Type):
     if (_type == Any):
         return SurQLType.ANY
     if (_type == dict):
-        return SurQLType.OBJECT
+        return SurQLType.DICT
     if (_type == SurQLNullable):
         return SurQLType.NULL
     if (_type == NoneType):
@@ -38,50 +40,15 @@ def parseType(_type: Type):
             else:
                 res.append(parseType(arg))
         return res
-    if (_type == dict):
-        return SurQLType.OBJECT
-    return SurQLType.RECORD
+    if (_type.__is_surql_collection__):
+        return SurQLType.RECORD
+    return SurQLType.OBJECT
 
 def parseUnionType(type: UnionType):
     types = []
     for e in get_args(type):
         types.append(parseType(e))
     return types
-
-# def parseSubType(_type: list):
-#     types = []
-#     for e in _type:
-#         simpleType = parseSimpleTypes(e)
-#         if (simpleType is not None):
-#             types.append(simpleType)
-#         else:
-#             origin = get_origin(e)
-#             if (origin == Union or origin == UnionType):
-#                 for arg in get_args(e):
-#                     simpleType = parseSimpleTypes(arg)
-#                     if (simpleType is not None):
-#                         types.append(simpleType)
-#                     else:
-#                         types.append(e)
-#             else:
-#                 types.append(e)
-#     return types
-
-# def parseSubTypes(types: list, annotation: Type):
-#     subDef = []
-#     for _type in types:
-#         if (
-#             _type == SurQLType.ARRAY or
-#             _type == SurQLType.OBJECT or
-#             _type == SurQLType.RECORD
-#         ):
-#             subDef = parseSubType(get_args(annotation))
-#             for (idx, sub) in enumerate(subDef):
-#                 if isinstance(sub, SurQLType) is not True:
-#                     subDef[idx] = parseField(name=None, annotation=sub)
-#     if (len(subDef) == 0):
-#         subDef = None
-#     return subDef
 
 def is_union(annotation: Type):
     origin = get_origin(annotation)
@@ -99,7 +66,7 @@ def parseField(name: Optional[str], annotation: Type):
     #subDef = parseSubTypes(types, annotation)
     return SurQLField(name=name, types=types)
 
-def parseFields(model: SchemaType):
+def parseFields(model: BaseModel):
     fields = []
     for field_name, field in model.model_fields.items():
         fields.append(parseField(field_name, field.annotation))

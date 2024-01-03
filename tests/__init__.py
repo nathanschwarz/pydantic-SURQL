@@ -21,26 +21,34 @@ class BasicTypesTest(BaseModel):
     t_dict: dict = Field(description="should be an object")
     t_multi: str | int | float | bool | datetime | dict = Field(description="should be a multi type")
 
-@toSurql("basic_array_types")
-class BasicArrayTypesTest(BaseModel):
+# @toSurql("basic_array_types")
+# class BasicArrayTypesTest(BaseModel):
+#     """
+#         test all basic array types parsing :
+#         string, number, datetime, bool
+#     """
+#     arr_str: list[str]
+#     arr_float: list[float]
+#     arr_int: list[int]
+#     arr_bool: list[bool]
+#     arr_date: list[datetime]
+#     arr_dict: list[dict]
+#     arr_nullable: list[str | SurQLNullable]
+#     arr_optional: Optional[list[str]]
+#     arr_optional_nullable: Optional[list[str | SurQLNullable]]
+#     arr_any: list[Any]
+#     arr_multi: list[str | int | float | bool | datetime | dict]
+
+
+@toSurql("complex_types")
+class complexObjectsTest(BaseModel):
     """
-        test all basic array types parsing :
-        string, number, datetime, bool
+        test all schemafull objects types parsing
     """
-    arr_str: list[str]
-    arr_float: list[float]
-    arr_int: list[int]
-    arr_bool: list[bool]
-    arr_date: list[datetime]
-    arr_dict: list[dict]
-    arr_nullable: list[str | SurQLNullable]
-    arr_optional: Optional[list[str]]
-    arr_optional_nullable: Optional[list[str | SurQLNullable]]
-    arr_any: list[Any]
-    arr_multi: list[str | int | float | bool | datetime | dict]
+    complex_obj: BasicTypesTest
+    complex_obj_arr: list[BasicTypesTest]
 
 def main():
-    #pass
     for table in Mapper.tables:
         print(table.model_dump_json(indent=2))
         #print(table.to_surql())

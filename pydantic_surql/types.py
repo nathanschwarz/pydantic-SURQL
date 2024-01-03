@@ -1,18 +1,24 @@
-from typing import List, Type, Set
+from typing import List, Type, Set, Union
 from enum import Enum
 from typing import Optional
 from pydantic import BaseModel
 
-SchemaType = Type[BaseModel]
 SurQLNullable = Type[None]
 
 class SurQLType(Enum):
+    """
+        SurQL types enumeration
+        note:
+        the DICT type is equivalent to a flexible object
+        the OBJECT type is equivalent to a schemafull object
+    """
     STRING = "string"
     NUMBER = "number"
     DATE = "datetime"
     ANY = "any"
     BOOLEAN = "bool"
     ARRAY = "array"
+    DICT = "dict"
     OBJECT = "object"
     RECORD = "record"
     OPTIONAL = "optional"
@@ -28,17 +34,13 @@ BASIC_TYPES = [
 ]
 
 COMPLEX_TYPES = [
-    SurQLType.ARRAY,
     SurQLType.OBJECT,
     SurQLType.RECORD,
 ]
 
-RecursiveType = SurQLType | list[SurQLType]
-
 class SurQLField(BaseModel):
     name: Optional[str]
-    types: list[SurQLType | list[SurQLType]]
-    #subDef: Optional[list[SurQLType | SchemaType | 'SurQLField']]
+    types: Union[list[SurQLType | list[SurQLType]], 'SurQLField']
 
     def to_surql(self, table_name: str) -> List[str]:
         fieldSurql = ["TYPE"]
