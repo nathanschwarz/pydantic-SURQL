@@ -1,8 +1,9 @@
-from typing import Type, Union, get_origin, get_args
+from typing import Any, Type, Union, get_origin, get_args
 from types import UnionType, NoneType, GenericAlias
 from .types import SchemaType, SurQLField, SurQLType, SurQLNullable
 from datetime import datetime
-def parseType(_type: Type):
+
+def parseSimpleTypes(_type: Type):
     if (_type == str):
         return SurQLType.STRING
     if (_type == int or _type == float):
@@ -11,14 +12,22 @@ def parseType(_type: Type):
         return SurQLType.DATE
     if (_type == bool):
         return SurQLType.BOOLEAN
+    if (_type == Any):
+        return SurQLType.ANY
+    return None
+
+def parseType(_type: Type):
+    simpleType = parseSimpleTypes(_type)
+    if (simpleType is not None):
+        return simpleType
     if (isinstance(_type, GenericAlias) and _type.__origin__ == list):
         return SurQLType.ARRAY
     if (_type == dict):
         return SurQLType.OBJECT
     if (_type == SurQLNullable):
-        return SurQLType.OPTIONAL
-    if (_type == NoneType):
         return SurQLType.NULL
+    if (_type == NoneType):
+        return SurQLType.OPTIONAL
     return SurQLType.RECORD
 
 def parseUnionType(type: UnionType):
@@ -34,14 +43,9 @@ def parseSubType(_type: list):
     if (len(_type) == 0):
         return None
     for e in _type:
-        if (e == str):
-            types.append(SurQLType.STRING)
-        elif (e == int or e == float):
-            types.append(SurQLType.NUMBER)
-        elif (e == datetime.date or e == datetime):
-            types.append(SurQLType.DATE)
-        elif (e == bool):
-            types.append(SurQLType.BOOLEAN)
+        simpleType = parseSimpleTypes(e)
+        if (simpleType is not None):
+            types.append(simpleType)
         else:
             types.append(e)
     return types

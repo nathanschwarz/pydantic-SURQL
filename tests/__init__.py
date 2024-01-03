@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 from pydantic_surql import toSurql, Mapper
 from pydantic_surql.types import SurQLNullable
 from pydantic import BaseModel
@@ -8,7 +8,7 @@ from pydantic import BaseModel
 class BasicTypesTest(BaseModel):
     """
         test all basic types parsing :
-        string, number, datetime, bool, nullable, optional
+        string, number, datetime, bool, nullable, optional, any
     """
     t_str: str
     t_float: float
@@ -17,6 +17,8 @@ class BasicTypesTest(BaseModel):
     t_date: datetime
     t_nullable: str | SurQLNullable
     t_optional: Optional[str]
+    t_optional_nullable: Optional[str | SurQLNullable]
+    t_any: Any
 
 @toSurql("basic_array_types")
 class BasicArrayTypesTest(BaseModel):

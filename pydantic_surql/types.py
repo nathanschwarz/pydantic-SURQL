@@ -10,6 +10,7 @@ class SurQLType(Enum):
     STRING = "string"
     NUMBER = "number"
     DATE = "datetime"
+    ANY = "any"
     BOOLEAN = "bool"
     ARRAY = "array"
     OBJECT = "object"
