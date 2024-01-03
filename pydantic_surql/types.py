@@ -21,7 +21,7 @@ class SurQLType(Enum):
 class SurQLField(BaseModel):
     name: Optional[str]
     types: list[SurQLType]
-    subDef: Optional[list[SurQLType] | SurQLType | SchemaType | 'SurQLField']
+    subDef: Optional[list[SurQLType | SurQLType | SchemaType | 'SurQLField']]
 
     __hash__ = object.__hash__
 
