@@ -4,10 +4,10 @@ from pydantic_surql import toSurql, Mapper
 from pydantic_surql.types import SurQLNullable
 from pydantic import BaseModel, Field
 
-@toSurql("basic_types")
-class BasicTypesTest(BaseModel):
+
+class BasicTypesModel(BaseModel):
     """
-        test all basic types parsing
+        test all basic types parsing (as an object when referenced)
     """
     t_str: str = Field(description="should be a string")
     t_float: float = Field(description="should be a number")
@@ -20,6 +20,13 @@ class BasicTypesTest(BaseModel):
     t_any: Any = Field(description="should be an any type")
     t_dict: dict = Field(description="should be an object")
     t_multi: str | int | float | bool | datetime | dict = Field(description="should be a multi type")
+
+@toSurql("basic_types")
+class BasicTypesTest(BasicTypesModel):
+    """
+        test all basic types parsing (as a collection object when referenced)
+    """
+    pass
 
 @toSurql("array_types")
 class BasicArrayTypesTest(BaseModel):
@@ -64,6 +71,24 @@ class complexRecordTest(BaseModel):
     complex_record_arr: list[BasicTypesTest]
     nullable_record_arr: list[SurQLNullable | BasicTypesTest]
     optional_record_arr: Optional[list[BasicTypesTest]]
+
+@toSurql("obj_types")
+class complexObjTest(BaseModel):
+    """
+        test all objs types parsing :
+            - obj
+            - array<objs>
+            - optional<obj>
+            - optional<array<objs>>
+            - nullable<obj>
+            - nullable<array<objs>>
+    """
+    complex_obj: BasicTypesModel
+    nullable_obj: SurQLNullable | BasicTypesModel
+    optional_obj: Optional[BasicTypesModel]
+    complex_obj_arr: list[BasicTypesModel]
+    nullable_obj_arr: list[SurQLNullable | BasicTypesModel]
+    optional_obj_arr: Optional[list[BasicTypesModel]]
 
 def main():
     for table in Mapper.tables:

@@ -40,7 +40,7 @@ def parseType(_type: Type):
             else:
                 res.append(parseType(arg))
         return res
-    if (_type.__is_surql_collection__):
+    if hasattr(_type, '__is_surql_collection__'):
         test = SurQLField(name=None, types=[SurQLType.RECORD], recordLink=_type.__surql_table_name__)
         print(test)
         return test
