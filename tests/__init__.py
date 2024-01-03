@@ -21,11 +21,16 @@ class BasicTypesTest(BaseModel):
     t_dict: dict = Field(description="should be an object")
     t_multi: str | int | float | bool | datetime | dict = Field(description="should be a multi type")
 
-@toSurql("basic_array_types")
+@toSurql("array_types")
 class BasicArrayTypesTest(BaseModel):
     """
         test all basic array types parsing :
-        string, number, datetime, bool
+        - string
+        - number
+        - datetime
+        - bool
+        - dict
+        - nested arrays
     """
     arr_str: list[str]
     arr_float: list[float]
@@ -42,13 +47,23 @@ class BasicArrayTypesTest(BaseModel):
     arr_nested_nested: list[list[list[str]]]
 
 
-@toSurql("complex_types")
-class complexRecordsTest(BaseModel):
+@toSurql("record_types")
+class complexRecordTest(BaseModel):
     """
-        test all records types parsing
+        test all records types parsing :
+            - record
+            - array<records>
+            - optional<record>
+            - optional<array<records>>
+            - nullable<record>
+            - nullable<array<records>>
     """
     complex_record: BasicTypesTest
+    nullable_record: SurQLNullable | BasicTypesTest
+    optional_record: Optional[BasicTypesTest]
     complex_record_arr: list[BasicTypesTest]
+    nullable_record_arr: list[SurQLNullable | BasicTypesTest]
+    optional_record_arr: Optional[list[BasicTypesTest]]
 
 def main():
     for table in Mapper.tables:
