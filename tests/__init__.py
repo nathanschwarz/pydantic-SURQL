@@ -29,3 +29,6 @@ class BasicArrayTypesTest(BaseModel):
     t_int: list[int]
     t_bool: list[bool]
     t_date: list[datetime]
+
+def main():
+    print("testing parsing")

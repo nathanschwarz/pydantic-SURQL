@@ -1,34 +1,7 @@
-from pydantic import BaseModel
-from typing import Type, Union, get_origin, get_args
-from types import UnionType, NoneType
-from datetime import datetime
-from .types import SurQLSchema, SchemaType, SurQLField, SurQLType, SurQLTable, SurQLMapper, SurQLNullable, parseType, parseUnionType, parseSubType
+from .parsers import parseFields
+from .types import SchemaType, SurQLTable, SurQLMapper
 
 Mapper = SurQLMapper(tables=[])
-
-def parseFields(model: SchemaType):
-    print(model)
-    fields = []
-    for field_name, field in model.model_fields.items():
-        types = []
-        subDef = None
-        origin = get_origin(field.annotation)
-        if (origin == Union):
-            types = parseUnionType(field.annotation)
-        else:
-            types = [parseType(field.annotation)]
-        for _type in types:
-            if (
-                _type == SurQLType.ARRAY or
-                _type == SurQLType.OBJECT or
-                _type == SurQLType.RECORD
-            ):
-                subDef = parseSubType(get_args(field.annotation))
-                if isinstance(subDef, SurQLType) is not True:
-                    print(subDef, field.annotation)
-        fields.append(SurQLField(name=field_name, types=types, subDef=subDef))
-    print(fields)
-    return fields
 
 def toSurql(name: str):
     """
@@ -37,6 +10,7 @@ def toSurql(name: str):
     def inner(model: SchemaType):
         table = SurQLTable(name=name, fields=[])
         fields = parseFields(model)
+        print(fields)
 
             #print(types, subDef)
                 #table.fields.append(field)
