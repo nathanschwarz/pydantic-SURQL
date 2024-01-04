@@ -43,16 +43,25 @@ COMPLEX_TYPES = [
 RecursiveType = TypeAliasType('RecursiveType', List[Union[SurQLType, 'SurQLField', 'RecursiveType']])
 
 class SurQLField(BaseModel):
+    """
+        A pydantic SurQL field definition
+    """
     name: Optional[str]
     types: RecursiveType
     recordLink: Optional[str] = None
 
     @classmethod
     def _f_string(cls, field: str, table: str, types: str, isFlexible: bool):
+        """
+            return a SDL field definition string
+        """
         return f"DEFINE FIELD {field} ON TABLE {table} {'FLEXIBLE ' if isFlexible else ''}TYPE {types};"
 
     @classmethod
     def surqlFromTypes(cls, table_name: str, field_name: str, types: List[Type]) -> list[str]:
+        """
+            return SDLS fields definitions recursively
+        """
         res = []
         nextFields = []
         isOptional = False
@@ -84,6 +93,7 @@ class SurQLField(BaseModel):
 
 
     def to_surql(self, table_name: str) -> List[str]:
+        """return a SDL field definition"""
         fieldTypes = SurQLField.surqlFromTypes(table_name, self.name, self.types)
         return "\n".join(fieldTypes)
 
@@ -93,13 +103,21 @@ class SurQLField(BaseModel):
 SurQLField.model_rebuild()
 
 class SurQLTable(BaseModel):
+    """
+        A pydantic SurQL table definition
+        TODO: implement indexes definitions (unique, search)
+        TODO: implement views definitions
+        TODO: implement table permissions
+    """
     name: str
     fields: Set[SurQLField]
 
     def _table_def(self):
+        """return a SDL schemafull table definition"""
         return f"DEFINE TABLE {self.name} SCHEMAFULL;"
 
     def to_surql(self):
+        """return a SDL table definition with all the fields SDL definitions"""
         res = [self._table_def()]
         for field in self.fields:
             res.append(field.to_surql(self.name))

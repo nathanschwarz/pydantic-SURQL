@@ -3,12 +3,15 @@ from types import UnionType, NoneType, GenericAlias
 from .cache import Cache
 
 from pydantic import BaseModel
-from .types import SurQLField, SurQLType, SurQLNullable
+from .types import RecursiveType, SurQLField, SurQLType, SurQLNullable
 from datetime import datetime
 
 cache = Cache()
 
-def parseSimpleTypes(_type: Type):
+def parseSimpleTypes(_type: Type) -> SurQLType | None:
+    """
+        Parse simple type definitions
+    """
     if (_type == str):
         return SurQLType.STRING
     if (_type == int or _type == float):
@@ -27,7 +30,10 @@ def parseSimpleTypes(_type: Type):
         return SurQLType.OPTIONAL
     return None
 
-def parseType(_type: Type):
+def parseType(_type: Type) -> RecursiveType:
+    """
+        Parse a type
+    """
     simpleType = parseSimpleTypes(_type)
     if (simpleType is not None):
         return simpleType
@@ -47,17 +53,26 @@ def parseType(_type: Type):
         return SurQLField(name=None, types=[SurQLType.RECORD], recordLink=_type.__surql_table_name__)
     return SurQLField(name=None, types=parseFields(_type), recordLink=None)
 
-def parseUnionType(type: UnionType):
+def parseUnionType(type: UnionType) -> RecursiveType:
+    """
+        Parse a Union type
+    """
     types = []
     for e in get_args(type):
         types.append(parseType(e))
     return types
 
-def is_union(annotation: Type):
+def is_union(annotation: Type) -> bool:
+    """
+        Check if a type is a Union
+    """
     origin = get_origin(annotation)
     return (origin == Union or origin == UnionType)
 
-def parseFieldType(annotation: Type):
+def parseFieldType(annotation: Type) -> RecursiveType:
+    """
+        Parse a pydantic model field type to a SurQLField
+    """
     if (is_union(annotation)):
         types = parseUnionType(annotation)
     else:
@@ -65,11 +80,17 @@ def parseFieldType(annotation: Type):
     return types
 
 def parseField(name: Optional[str], annotation: Type):
+    """
+        Parse a pydantic model field to a SurQLField
+    """
     types = parseFieldType(annotation)
     #subDef = parseSubTypes(types, annotation)
     return SurQLField(name=name, types=types)
 
-def parseFields(model: BaseModel):
+def parseFields(model: BaseModel) -> list[SurQLField]:
+    """
+        Parse a pydantic model to a list of SurQLField
+    """
     fields = []
     for field_name, field in model.model_fields.items():
         _field = None
