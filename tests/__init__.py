@@ -92,5 +92,5 @@ class complexObjTest(BaseModel):
 
 def main():
     for table in Mapper.tables:
-        print(table.model_dump_json(indent=2))
-        #print(table.to_surql())
+        #print(table.model_dump_json(indent=2))
+        print(table.to_surql())

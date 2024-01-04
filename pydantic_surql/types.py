@@ -1,4 +1,5 @@
-from typing import List, Type, Set, Union
+from types import GenericAlias
+from typing import List, Type, Set, Union, get_args
 from enum import Enum
 from typing import Optional
 from pydantic import BaseModel
@@ -19,13 +20,13 @@ class SurQLType(Enum):
     ANY = "any"
     BOOLEAN = "bool"
     ARRAY = "array"
-    DICT = "dict"
+    DICT = "FLEXIBLE TYPE object"
     OBJECT = "object"
-    RECORD = "record"
-    OPTIONAL = "optional"
+    RECORD = "record<%s>"
+    OPTIONAL = "optional<%s>"
     NULL = "null"
 
-BASIC_TYPES = [
+BASIC_TYPES: list[SurQLType] = [
     SurQLType.STRING,
     SurQLType.NUMBER,
     SurQLType.DATE,
@@ -46,36 +47,41 @@ class SurQLField(BaseModel):
     types: RecursiveType
     recordLink: Optional[str] = None
 
-    def to_surql(self, table_name: str) -> List[str]:
-        fieldSurql = ["TYPE"]
-        fieldTypes = []
-        basicTypes = [e for e in self.types if e in BASIC_TYPES]
-        complexTypes = [e for e in self.types if e in COMPLEX_TYPES]
-        subFields = []
-        if (len(basicTypes) > 0):
-            fieldTypes += [e.value for e in basicTypes]
-        # for e in complexTypes:
-        #     if (e == SurQLType.OBJECT):
-        #         fieldTypes.append(e.value)
-        #         if (self.subDef is None or len(self.subDef) == 0):
-        #             fieldSurql = ["FLEXIBLE TYPE"]
-        #         elif (self.subDef is SurQLType):
-        #             subFields += [e.value for e in self.subDef]
-        #     if (e == SurQLType.ARRAY):
-        #         fieldTypes.append(e.value)
-        #         subFields +=
-        #     if (e == SurQLType.RECORD):
-        #         print("record type not supported yet")
-        #         fieldTypes.append(f"record<>")
+    @classmethod
+    def _f_string(cls, field: str, table: str, types: str):
+        return f"DEFINE FIELD {field} ON TABLE {table} TYPE {types};"
 
-        fieldTypes = "|".join(fieldTypes)
-        if (SurQLType.OPTIONAL in self.types):
-            fieldSurql += [f"optional<{fieldTypes}>"]
-        else:
-            fieldSurql += [fieldTypes]
-        fieldSurql = " ".join(fieldSurql)
-        res = [f"DEFINE FIELD {self.name} ON TABLE {table_name} {fieldSurql};"]
-        return res
+    @classmethod
+    def surqlFromTypes(cls, table_name: str, field_name: str, types: List[Type]) -> list[str]:
+        res = []
+        nextFields = []
+        isOptional = False
+        for _type in types:
+            if (_type in BASIC_TYPES):
+                res += [_type.value]
+            elif (isinstance(_type, list)):
+                res += [SurQLType.ARRAY.value]
+                nextFields += cls.surqlFromTypes(table_name, f"{field_name}.*", _type)
+            elif (isinstance(_type, cls)):
+                if (_type.types == [SurQLType.RECORD]):
+                    res += [SurQLType.RECORD.value % _type.recordLink]
+                else:
+                    res += [SurQLType.OBJECT.value]
+                    for _field in _type.types:
+                        nextFields += cls.surqlFromTypes(table_name, f"{field_name}.{_field.name}", _field.types)
+            elif (_type is SurQLType.OPTIONAL):
+                isOptional = True
+            #else:
+                # print(_type)
+                # print("\n")
+        if (isOptional):
+            return [cls._f_string(field_name, table_name, SurQLType.OPTIONAL.value % "|".join(res))] + nextFields
+        return [cls._f_string(field_name, table_name, "|".join(res))] + nextFields
+
+
+    def to_surql(self, table_name: str) -> List[str]:
+        fieldTypes = SurQLField.surqlFromTypes(table_name, self.name, self.types)
+        return "\n".join(fieldTypes)
 
 
     __hash__ = object.__hash__
