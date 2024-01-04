@@ -1,5 +1,5 @@
 from typing import TypedDict, Type
-from pydantic_surql.types import SurQLField
+from .types import SurQLField
 
 class Cache():
     """
