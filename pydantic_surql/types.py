@@ -127,4 +127,7 @@ class SurQLTable(BaseModel):
     __hash__ = object.__hash__
 
 class SurQLMapper(BaseModel):
+    """
+        A simple mapper to store all the SurQL tables definitions generated from pydantic models
+    """
     tables: Set[SurQLTable]

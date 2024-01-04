@@ -32,7 +32,8 @@ def parseSimpleTypes(_type: Type) -> SurQLType | None:
 
 def parseType(_type: Type) -> RecursiveType:
     """
-        Parse a type
+        Parse a type:
+        TODO: check for objects recursive types (will raise: must be converted to record)
     """
     simpleType = parseSimpleTypes(_type)
     if (simpleType is not None):
