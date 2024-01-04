@@ -48,17 +48,21 @@ class SurQLField(BaseModel):
     recordLink: Optional[str] = None
 
     @classmethod
-    def _f_string(cls, field: str, table: str, types: str):
-        return f"DEFINE FIELD {field} ON TABLE {table} TYPE {types};"
+    def _f_string(cls, field: str, table: str, types: str, isFlexible: bool):
+        return f"DEFINE FIELD {field} ON TABLE {table} {'FLEXIBLE ' if isFlexible else ''}TYPE {types};"
 
     @classmethod
     def surqlFromTypes(cls, table_name: str, field_name: str, types: List[Type]) -> list[str]:
         res = []
         nextFields = []
         isOptional = False
+        isFlexible = False
         for _type in types:
             if (_type in BASIC_TYPES):
                 res += [_type.value]
+            if (_type is SurQLType.DICT):
+                isFlexible = True
+                res += [SurQLType.OBJECT.value]
             elif (isinstance(_type, list)):
                 res += [SurQLType.ARRAY.value]
                 nextFields += cls.surqlFromTypes(table_name, f"{field_name}.*", _type)
@@ -75,8 +79,8 @@ class SurQLField(BaseModel):
                 # print(_type)
                 # print("\n")
         if (isOptional):
-            return [cls._f_string(field_name, table_name, SurQLType.OPTIONAL.value % "|".join(res))] + nextFields
-        return [cls._f_string(field_name, table_name, "|".join(res))] + nextFields
+            return [cls._f_string(field_name, table_name, SurQLType.OPTIONAL.value % "|".join(res), isFlexible)] + nextFields
+        return [cls._f_string(field_name, table_name, "|".join(res), isFlexible)] + nextFields
 
 
     def to_surql(self, table_name: str) -> List[str]:
