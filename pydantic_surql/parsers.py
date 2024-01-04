@@ -1,9 +1,12 @@
 from typing import Any, Optional, Type, Union, get_origin, get_args, get_type_hints
 from types import UnionType, NoneType, GenericAlias
+from .cache import Cache
 
 from pydantic import BaseModel
 from .types import SurQLField, SurQLType, SurQLNullable
 from datetime import datetime
+
+cache = Cache()
 
 def parseSimpleTypes(_type: Type):
     if (_type == str):
@@ -69,5 +72,11 @@ def parseField(name: Optional[str], annotation: Type):
 def parseFields(model: BaseModel):
     fields = []
     for field_name, field in model.model_fields.items():
-        fields.append(parseField(field_name, field.annotation))
+        _field = None
+        if (cache.has(field.annotation)):
+            _field = cache.get(field.annotation)
+        else:
+            _field = parseField(field_name, field.annotation)
+            cache.set(field.annotation, _field)
+        fields.append(_field)
     return fields
