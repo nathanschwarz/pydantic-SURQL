@@ -151,12 +151,11 @@ class SurQLTableConfig(BaseModel):
     """
         A pydantic SurQL table configuration definition
         TODO: add validation for changefeed
-        TODO: implement views definitions
         TODO: implement table permissions
         TODO: implement table events
     """
     asView: SurQLView | None = Field(default=None, description="view definition")
-    strict: bool = Field(default=False, description="schemafull|schemaless")
+    strict: bool = Field(default=True, description="schemafull|schemaless")
     changeFeed: str | None = Field(default=None, description="changefeed definition")
     drop: bool = Field(default=False, description="set table in DROP mode")
     indexes: Set[SurQLIndex] = Field(default_factory=set, description="table indexes definitions")
