@@ -131,6 +131,7 @@ class SurQLTableConfig(BaseModel):
         TODO: add validation for changefeed
         TODO: implement views definitions
         TODO: implement table permissions
+        TODO: implement table events
     """
     strict: bool = Field(default=False, description="schemafull|schemaless")
     changeFeed: str | None = Field(default=None, description="changefeed definition")
