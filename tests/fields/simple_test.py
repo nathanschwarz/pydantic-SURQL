@@ -95,10 +95,18 @@ class TestSimpleFields:
         """
         field = parseField(F_NAME, dict)
         self.simple_field_check(field, [SurQLType.DICT])
+        assert field.to_surql(T_NAME) == "\n".join([
+            "DEFINE FIELD %s ON TABLE %s FLEXIBLE TYPE %s;" % (F_NAME, T_NAME, "object"),
+        ])
 
     def test_multi(self):
         """
             test multi type parsing
         """
         field = parseField(F_NAME, str | int | float | bool | datetime | dict)
-        self.simple_field_check(field, [SurQLType.STRING, SurQLType.NUMBER, SurQLType.NUMBER, SurQLType.BOOLEAN, SurQLType.DATE, SurQLType.DICT])
+        common_types = [SurQLType.STRING, SurQLType.NUMBER, SurQLType.NUMBER, SurQLType.BOOLEAN, SurQLType.DATE, SurQLType.DICT]
+        SDL_types = [SurQLType.STRING.value, SurQLType.NUMBER.value, SurQLType.NUMBER.value, SurQLType.BOOLEAN.value, SurQLType.DATE.value, SurQLType.OBJECT.value]
+        self.simple_field_check(field, common_types)
+        assert field.to_surql(T_NAME) == "\n".join([
+            "DEFINE FIELD %s ON TABLE %s FLEXIBLE TYPE %s;" % (F_NAME, T_NAME, "|".join(SDL_types)),
+        ])
