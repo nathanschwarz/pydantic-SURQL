@@ -7,6 +7,7 @@ Mapper = SurQLMapper(tables=[])
 def model_to_surql(name: str, config: SurQLTableConfig, model: BaseModel) -> SurQLTable:
     """
         Convert a pydantic model to a SurQLTable
+        can be used at runtime
     """
     model.__is_surql_collection__ = True
     model.__surql_table_name__ = name
@@ -14,7 +15,7 @@ def model_to_surql(name: str, config: SurQLTableConfig, model: BaseModel) -> Sur
 
 def to_surql(name: str, config: SurQLTableConfig = SurQLTableConfig()):
     """
-        A simple decorator to onvert a pydantic model to a surQL SDL table definition
+        A simple decorator to convert a pydantic model to a surQL SDL table definition
     """
     def inner(model: BaseModel):
         table = model_to_surql(name, config, model)
