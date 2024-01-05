@@ -8,6 +8,8 @@ def model_to_surql(name: str, config: SurQLTableConfig, model: BaseModel) -> Sur
     """
         Convert a pydantic model to a SurQLTable
         can be used at runtime
+        TODO: if model.model_config.extra = "allow" => config.strict = False
+        TODO: if config.strict = "allow" => config.strict = False
     """
     model.__is_surql_collection__ = True
     model.__surql_table_name__ = name

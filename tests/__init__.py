@@ -18,7 +18,7 @@ class BasicTypesModel(BaseModel):
     t_optional: Optional[str] = Field(description="should be an optional string")
     t_optional_nullable: Optional[str | SurQLNullable] = Field(description="should be an optional nullable string")
     t_any: Any = Field(description="should be an any type")
-    t_dict: dict = Field(description="should be an object")
+    t_dict: dict = Field(description="should be a flexible object")
     t_multi: str | int | float | bool | datetime | dict = Field(description="should be a multi type")
     t_any_record: SurQLAnyRecord
 
@@ -50,6 +50,7 @@ class BasicArrayTypesTest(BaseModel):
     arr_optional: Optional[list[str]]
     arr_optional_nullable: Optional[list[str | SurQLNullable]]
     arr_any: list[Any]
+    arr_any_record: list[SurQLAnyRecord]
     arr_multi: list[str | int | float | bool | datetime | dict]
     arr_nested: list[list[str]]
     arr_nested_nested: list[list[list[str]]]
