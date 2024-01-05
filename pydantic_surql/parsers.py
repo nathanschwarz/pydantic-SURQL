@@ -32,14 +32,20 @@ def parseSimpleTypes(_type: Type) -> SurQLType | None:
         return SurQLType.ANY_RECORD
     return None
 
-def parseType(_type: Type) -> RecursiveType:
+def parseType(_type: Type) -> RecursiveType | SurQLField:
     """
         Parse a type:
         TODO: check for objects recursive types (will raise: must be converted to record)
     """
+    if (cache.has(_type)):
+        return cache.get(_type)
+
+    # is a simple type
     simpleType = parseSimpleTypes(_type)
     if (simpleType is not None):
-        return simpleType
+        return cache.set(_type, simpleType)
+
+    # is a list
     if (isinstance(_type, GenericAlias) and _type.__origin__ == list):
         args = get_args(_type)
         res = []
@@ -51,9 +57,13 @@ def parseType(_type: Type) -> RecursiveType:
                 res += parseUnionType(arg)
             else:
                 res.append(parseType(arg))
-        return res
+        return cache.set(_type, res)
+
+    # is a pydantic model decorated with @surql_collection
     if hasattr(_type, '__is_surql_collection__'):
         return SurQLField(name=None, types=[SurQLType.RECORD], recordLink=_type.__surql_table_name__)
+
+    # is a pydantic model
     return SurQLField(name=None, types=parseFields(_type), recordLink=None)
 
 def parseUnionType(type: UnionType) -> RecursiveType:
@@ -61,9 +71,12 @@ def parseUnionType(type: UnionType) -> RecursiveType:
         Parse a Union type
     """
     types = []
-    for e in get_args(type):
-        types.append(parseType(e))
-    return types
+    if (cache.has(type)):
+        types = cache.get(type)
+    else:
+        for e in get_args(type):
+            types.append(parseType(e))
+    return cache.set(type, types)
 
 def is_union(annotation: Type) -> bool:
     """
@@ -87,7 +100,6 @@ def parseField(name: Optional[str], annotation: Type):
         Parse a pydantic model field to a SurQLField
     """
     types = parseFieldType(annotation)
-    #subDef = parseSubTypes(types, annotation)
     return SurQLField(name=name, types=types)
 
 def parseFields(model: BaseModel) -> list[SurQLField]:
@@ -97,11 +109,11 @@ def parseFields(model: BaseModel) -> list[SurQLField]:
     fields = []
     for field_name, field in model.model_fields.items():
         _field = None
-        cache_key = (field_name, field.annotation)
-        if cache.has(cache_key):
-            _field = cache.get(cache_key)
-        else:
-            _field = parseField(field_name, field.annotation)
-            cache.set(cache_key, _field)
+        # cache_key = (field_name, field.annotation)
+        # if cache.has(cache_key):
+        #     _field = cache.get(cache_key)
+        # else:
+        _field = parseField(field_name, field.annotation)
+        #cache.set(cache_key, _field)
         fields.append(_field)
     return fields
