@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Optional
 from pydantic_surql.parsers import parseFields
-from pydantic_surql.types import SurQLNullable, SurQLAnyRecord, SurQLType, SurQLField
+from pydantic_surql.types import SurQLNullable, SurQLType, SurQLField
 from pydantic import BaseModel
 
 class ChildChildObject(BaseModel):
