@@ -17,9 +17,6 @@ SurQLAnyRecord = Type[dict]
 class SurQLType(Enum):
     """
         SurQL types enumeration
-        note:
-        the DICT type is equivalent to a flexible object
-        the OBJECT type is equivalent to a schemafull object
     """
     STRING = "string"
     NUMBER = "number"
@@ -117,6 +114,8 @@ class SurQLTable(BaseModel):
         TODO: implement indexes definitions (unique, search)
         TODO: implement views definitions
         TODO: implement table permissions
+        TODO: implement DROP
+        TODO: implement CHANGEFEED
     """
     name: str
     fields: Set[SurQLField]
