@@ -21,6 +21,7 @@ class ParentObject(BaseModel):
     birthday: datetime
     nickname: Optional[str] = None
     details: ChildObject
+    details_arr: list[ChildObject]
 
 def check_field(field: SurQLField, truth: SurQLField):
     assert field.name == truth.name
@@ -31,13 +32,25 @@ def check_field(field: SurQLField, truth: SurQLField):
 def check_fields(fields: list[SurQLField], truth: list[SurQLField]):
     assert len(fields) == len(truth)
     for (idx, field) in enumerate(fields):
-        if (field.name != "details"):
+        if (not field.name.startswith("details")):
             check_field(field, truth[idx])
+        elif (field.name.endswith('arr')):
+            check_fields(field.types[0][0].types, truth[idx].types[0][0].types)
         else:
             check_fields(field.types[0].types, truth[idx].types[0].types)
 
 def test_object():
     fields = parseFields(ParentObject)
+    details = SurQLField(name=None, types=[
+            SurQLField(name="address", types=[SurQLType.STRING]),
+            SurQLField(name="phone", types=[SurQLType.STRING]),
+            SurQLField(name="details", types=[
+                SurQLField(name=None, types=[
+                    SurQLField(name="country", types=[SurQLType.STRING]),
+                    SurQLField(name="city", types=[SurQLType.STRING]),
+                ])
+            ]),
+        ])
     truth = [
         SurQLField(name="name", types=[SurQLType.STRING]),
         SurQLField(name="age", types=[SurQLType.NUMBER]),
@@ -45,18 +58,8 @@ def test_object():
         SurQLField(name="is_active", types=[SurQLType.BOOLEAN]),
         SurQLField(name="birthday", types=[SurQLType.DATE]),
         SurQLField(name="nickname", types=[SurQLType.STRING, SurQLType.OPTIONAL]),
-        SurQLField(name="details", types=[
-            SurQLField(name=None, types=[
-                SurQLField(name="address", types=[SurQLType.STRING]),
-                SurQLField(name="phone", types=[SurQLType.STRING]),
-                SurQLField(name="details", types=[
-                    SurQLField(name=None, types=[
-                        SurQLField(name="country", types=[SurQLType.STRING]),
-                        SurQLField(name="city", types=[SurQLType.STRING]),
-                    ])
-                ]),
-            ])
-        ]),
+        SurQLField(name="details", types=[details]),
+        SurQLField(name="details_arr", types=[[details]]),
     ]
     check_fields(fields, truth)
 
