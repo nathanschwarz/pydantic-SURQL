@@ -108,6 +108,23 @@ class SurQLField(BaseModel):
 
 SurQLField.model_rebuild()
 
+class SurQLIndex(BaseModel):
+    """
+        A pydantic SurQL index definition
+        TODO: implement search indexes
+    """
+    name: str
+    fields: list[str]
+    unique: bool = False
+
+    def to_surql(self, table_name: str) -> str:
+        """
+            return a SDL index definition
+        """
+        return f"DEFINE INDEX {self.name} ON TABLE {table_name} {'UNIQUE' if self.unique else ''} FIELDS ({','.join(self.fields)});"
+
+    __hash__ = object.__hash__
+
 class SurQLTableConfig(BaseModel):
     """
         A pydantic SurQL table configuration definition
@@ -116,14 +133,14 @@ class SurQLTableConfig(BaseModel):
         TODO: implement table permissions
     """
     strict: bool = Field(default=False, description="schemafull|schemaless")
-    changeFeed: str | None = None
+    changeFeed: str | None = Field(default=None, description="changefeed definition")
     drop: bool = Field(default=False, description="set table in DROP mode")
+    indexes: Set[SurQLIndex] = Field(default_factory=set, description="table indexes definitions")
 
 
 class SurQLTable(BaseModel):
     """
         A pydantic SurQL table definition
-        TODO: implement indexes definitions (unique, search)
     """
     name: str
     fields: Set[SurQLField]
@@ -145,6 +162,8 @@ class SurQLTable(BaseModel):
         res = [self._table_def()]
         for field in self.fields:
             res.append(field.to_surql(self.name))
+        for index in self.config.indexes:
+            res.append(index.to_surql(self.name))
         return "\n".join(res)
 
 
