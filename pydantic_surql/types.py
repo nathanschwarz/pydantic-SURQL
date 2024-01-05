@@ -1,7 +1,7 @@
 from typing import List, Type, Set, Union
 from enum import Enum
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing_extensions import TypeAliasType
 
 """
@@ -108,21 +108,37 @@ class SurQLField(BaseModel):
 
 SurQLField.model_rebuild()
 
+class SurQLTableConfig(BaseModel):
+    """
+        A pydantic SurQL table configuration definition
+        TODO: add validation for changefeed
+        TODO: implement views definitions
+        TODO: implement table permissions
+    """
+    strict: bool = Field(default=False, description="schemafull|schemaless")
+    changeFeed: str | None = None
+    drop: bool = Field(default=False, description="set table in DROP mode")
+
+
 class SurQLTable(BaseModel):
     """
         A pydantic SurQL table definition
         TODO: implement indexes definitions (unique, search)
-        TODO: implement views definitions
-        TODO: implement table permissions
-        TODO: implement DROP
-        TODO: implement CHANGEFEED
     """
     name: str
     fields: Set[SurQLField]
+    config: SurQLTableConfig = SurQLTableConfig()
 
     def _table_def(self):
         """return a SDL schemafull table definition"""
-        return f"DEFINE TABLE {self.name} SCHEMAFULL;"
+        _definitions = [
+            "DEFINE TABLE",
+            self.name,
+            "DROP" if self.config.drop else None,
+            "SCHEMAFULL" if self.config.strict else "SCHEMALESS",
+            f"CHANGEFEED {self.config.changeFeed}" if self.config.changeFeed is not None else None,
+        ]
+        return " ".join([e for e in _definitions if e is not None]) + ';'
 
     def to_surql(self):
         """return a SDL table definition with all the fields SDL definitions"""
