@@ -1,7 +1,7 @@
 from typing import List, Type, Set, Union
 from enum import Enum
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from typing_extensions import TypeAliasType
 
 """
@@ -125,6 +125,28 @@ class SurQLIndex(BaseModel):
 
     __hash__ = object.__hash__
 
+class SurQLView(BaseModel):
+    """
+        A pydantic SurQL view query definition
+    """
+    select: list[str]
+    from_t: list[str]
+    where: list[str]
+    group_by: list[str]
+
+    def to_surql(self) -> str:
+        """
+            return a SDL view definition
+        """
+        _definitions = [
+            "AS SELECT",
+            ','.join(self.select),
+            "FROM",
+            ','.join(self.from_t),
+            "WHERE" if len(self.where) > 0 else None,
+        ] + ["GROUP BY ", ','.join(self.group_by)] if len(self.group_by) > 0 else []
+        return " ".join([e for e in _definitions if e is not None]) + ';'
+
 class SurQLTableConfig(BaseModel):
     """
         A pydantic SurQL table configuration definition
@@ -133,6 +155,7 @@ class SurQLTableConfig(BaseModel):
         TODO: implement table permissions
         TODO: implement table events
     """
+    asView: SurQLView | None = Field(default=None, description="view definition")
     strict: bool = Field(default=False, description="schemafull|schemaless")
     changeFeed: str | None = Field(default=None, description="changefeed definition")
     drop: bool = Field(default=False, description="set table in DROP mode")
@@ -152,6 +175,7 @@ class SurQLTable(BaseModel):
         _definitions = [
             "DEFINE TABLE",
             self.name,
+            self.config.asView.to_surql() if self.config.asView is not None else None,
             "DROP" if self.config.drop else None,
             "SCHEMAFULL" if self.config.strict else "SCHEMALESS",
             f"CHANGEFEED {self.config.changeFeed}" if self.config.changeFeed is not None else None,
@@ -161,12 +185,12 @@ class SurQLTable(BaseModel):
     def to_surql(self):
         """return a SDL table definition with all the fields SDL definitions"""
         res = [self._table_def()]
-        for field in self.fields:
-            res.append(field.to_surql(self.name))
-        for index in self.config.indexes:
-            res.append(index.to_surql(self.name))
+        if (self.config.asView is None):
+            for field in self.fields:
+                res.append(field.to_surql(self.name))
+            for index in self.config.indexes:
+                res.append(index.to_surql(self.name))
         return "\n".join(res)
-
 
     __hash__ = object.__hash__
 
@@ -175,3 +199,4 @@ class SurQLMapper(BaseModel):
         A simple mapper to store all the SurQL tables definitions generated from pydantic models
     """
     tables: Set[SurQLTable]
+    __hash__ = object.__hash__
