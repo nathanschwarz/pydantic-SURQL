@@ -1,24 +1,30 @@
 from datetime import datetime
 from typing import Any, Optional, Type
 from pydantic_surql.parsers import parseField
-from pydantic_surql.types import SurQLNullable, SurQLAnyRecord, SurQLType
+from pydantic_surql.types import SurQLField, SurQLNullable, SurQLAnyRecord, SurQLType
 
 F_NAME = "test"
 T_NAME = "test_table"
 
 class TestSimpleArrayFields:
+    def simple_field_check(self, field: SurQLField, types: list[SurQLType], optional: bool = False):
+        """
+            common test for type parsing
+        """
+        if (optional):
+            assert field.types == [*types, SurQLType.OPTIONAL]
+        else:
+            assert field.types == types
+        assert field.name is F_NAME
+        assert field.recordLink is None
+
     def common_check(self, _type: Type, surql_type: SurQLType, optional: bool = False):
         """
             common test for array<type> type parsing and SDL generation
         """
         __type = Optional[list[_type]] if optional else list[_type]
         field = parseField(F_NAME, __type)
-        if (optional):
-            assert field.types == [[surql_type], SurQLType.OPTIONAL]
-        else:
-            assert field.types == [[surql_type]]
-        assert field.name is F_NAME
-        assert field.recordLink is None
+        self.simple_field_check(field, [[surql_type]], optional)
         assert field.to_surql(T_NAME) == "\n".join([
             "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "optional<array>" if optional else "array"),
             "DEFINE FIELD %s.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, surql_type.value)
@@ -84,42 +90,60 @@ class TestSimpleArrayFields:
             test optional<array<str | null>> nullable type parsing and SDL generation
         """
         field = parseField(F_NAME, Optional[list[str | SurQLNullable]])
-        assert field.types == [[SurQLType.STRING, SurQLType.NULL], SurQLType.OPTIONAL]
-        assert field.name is F_NAME
-        assert field.recordLink is None
+        self.simple_field_check(field, [[SurQLType.STRING, SurQLType.NULL]], True)
+        assert field.to_surql(T_NAME) == "\n".join([
+            "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "optional<array>"),
+            "DEFINE FIELD %s.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "string|null"),
+        ])
 
     def test_dict(self):
         """
             test array<dict> type parsing and SDL generation
         """
         field = parseField(F_NAME, list[dict])
-        assert field.types == [[SurQLType.DICT]]
-        assert field.name is F_NAME
-        assert field.recordLink is None
+        self.simple_field_check(field, [[SurQLType.DICT]])
+        assert field.to_surql(T_NAME) == "\n".join([
+            "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "array"),
+            "DEFINE FIELD %s.* ON TABLE %s FLEXIBLE TYPE %s;" % (F_NAME, T_NAME, "object"),
+        ])
 
     def test_multi(self):
         """
             test array<str | int | float | bool | datetime | dict> type parsing and SDL generation
         """
         field = parseField(F_NAME, list[str | int | float | bool | datetime | dict])
-        assert field.types == [[SurQLType.STRING, SurQLType.NUMBER,  SurQLType.NUMBER, SurQLType.BOOLEAN, SurQLType.DATE, SurQLType.DICT]]
-        assert field.name is F_NAME
-        assert field.recordLink is None
+        common_types = [[SurQLType.STRING, SurQLType.NUMBER, SurQLType.NUMBER, SurQLType.BOOLEAN, SurQLType.DATE, SurQLType.DICT]]
+        SDL_types = [SurQLType.STRING.value, SurQLType.NUMBER.value, SurQLType.NUMBER.value, SurQLType.BOOLEAN.value, SurQLType.DATE.value, SurQLType.OBJECT.value]
+        self.simple_field_check(field, common_types)
+        assert field.to_surql(T_NAME) == "\n".join([
+            "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "array"),
+            "DEFINE FIELD %s.* ON TABLE %s FLEXIBLE TYPE %s;" % (F_NAME, T_NAME, "|".join(SDL_types)),
+        ])
 
     def test_nested(self):
         """
             test array<array<str>> type parsing
         """
-        field = parseField("test", list[list[str]])
-        assert field.types == [[[SurQLType.STRING]]]
-        assert field.name is "test"
-        assert field.recordLink is None
+        field = parseField(F_NAME, list[list[str]])
+        self.simple_field_check(field, [[[SurQLType.STRING]]])
+        assert field.to_surql(T_NAME) == "\n".join([
+            "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "array"),
+            "DEFINE FIELD %s.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "array"),
+            "DEFINE FIELD %s.*.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "string"),
+        ])
+
+
 
     def test_nested_nested(self):
         """
             test array<array<array<str>>> type parsing
         """
-        field = parseField("test", list[list[list[str]]])
-        assert field.types == [[[[SurQLType.STRING]]]]
-        assert field.name is "test"
-        assert field.recordLink is None
+        field = parseField(F_NAME, list[list[list[str]]])
+        self.simple_field_check(field, [[[[SurQLType.STRING]]]])
+        assert field.to_surql(T_NAME) == "\n".join([
+            "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "array"),
+            "DEFINE FIELD %s.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "array"),
+            "DEFINE FIELD %s.*.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "array"),
+            "DEFINE FIELD %s.*.*.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "string"),
+        ])
+
