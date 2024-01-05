@@ -21,6 +21,7 @@ class ParentObject(BaseModel):
     birthday: datetime
     nickname: Optional[str] = None
     details: ChildObject
+    details_opt: Optional[ChildObject]
     details_arr: list[ChildObject]
 
 def check_field(field: SurQLField, truth: SurQLField):
@@ -59,6 +60,7 @@ def test_object():
         SurQLField(name="birthday", types=[SurQLType.DATE]),
         SurQLField(name="nickname", types=[SurQLType.STRING, SurQLType.OPTIONAL]),
         SurQLField(name="details", types=[details]),
+        SurQLField(name="details_opt", types=[details, SurQLType.OPTIONAL]),
         SurQLField(name="details_arr", types=[[details]]),
     ]
     check_fields(fields, truth)
