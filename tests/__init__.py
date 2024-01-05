@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Any, Optional
 from pydantic_surql import toSurql, Mapper
-from pydantic_surql.types import SurQLNullable
+from pydantic_surql.types import SurQLNullable, SurQLAnyRecord
 from pydantic import BaseModel, Field
 
 
@@ -20,6 +20,7 @@ class BasicTypesModel(BaseModel):
     t_any: Any = Field(description="should be an any type")
     t_dict: dict = Field(description="should be an object")
     t_multi: str | int | float | bool | datetime | dict = Field(description="should be a multi type")
+    t_any_record: SurQLAnyRecord
 
 @toSurql("basic_types")
 class BasicTypesTest(BasicTypesModel):

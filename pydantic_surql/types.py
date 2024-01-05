@@ -4,7 +4,15 @@ from typing import Optional
 from pydantic import BaseModel
 from typing_extensions import TypeAliasType
 
-SurQLNullable = Type[None]
+"""
+    A custom type to define a nullable field
+"""
+SurQLNullable =  Type[None]
+
+"""
+    A custom type to define a flexible record
+"""
+SurQLAnyRecord = Type[dict]
 
 class SurQLType(Enum):
     """
@@ -22,12 +30,14 @@ class SurQLType(Enum):
     DICT = "FLEXIBLE TYPE object"
     OBJECT = "object"
     RECORD = "record<%s>"
+    ANY_RECORD = "record()"
     OPTIONAL = "optional<%s>"
     NULL = "null"
 
 BASIC_TYPES: list[SurQLType] = [
     SurQLType.STRING,
     SurQLType.NUMBER,
+    SurQLType.ANY_RECORD,
     SurQLType.DATE,
     SurQLType.BOOLEAN,
     SurQLType.ANY,
@@ -44,6 +54,7 @@ RecursiveType = TypeAliasType('RecursiveType', List[Union[SurQLType, 'SurQLField
 class SurQLField(BaseModel):
     """
         A pydantic SurQL field definition
+        TODO: implement permissions
     """
     name: Optional[str]
     types: RecursiveType
@@ -68,7 +79,7 @@ class SurQLField(BaseModel):
         for _type in types:
             if (_type in BASIC_TYPES):
                 res += [_type.value]
-            if (_type is SurQLType.DICT):
+            elif (_type is SurQLType.DICT):
                 isFlexible = True
                 res += [SurQLType.OBJECT.value]
             elif (isinstance(_type, list)):
@@ -83,9 +94,8 @@ class SurQLField(BaseModel):
                         nextFields += cls.surqlFromTypes(table_name, f"{field_name}.{_field.name}", _field.types)
             elif (_type is SurQLType.OPTIONAL):
                 isOptional = True
-            #else:
-                # print(_type)
-                # print("\n")
+            else:
+                raise Exception(f"Unknown type: {_type}, SDL generation not supported")
         if (isOptional):
             return [cls._f_string(field_name, table_name, SurQLType.OPTIONAL.value % "|".join(res), isFlexible)] + nextFields
         return [cls._f_string(field_name, table_name, "|".join(res), isFlexible)] + nextFields

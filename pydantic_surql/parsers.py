@@ -1,9 +1,9 @@
-from typing import Any, Optional, Type, Union, get_origin, get_args, get_type_hints
+from typing import Any, Optional, Type, Union, get_origin, get_args
 from types import UnionType, NoneType, GenericAlias
 from .cache import Cache
 
 from pydantic import BaseModel
-from .types import RecursiveType, SurQLField, SurQLType, SurQLNullable
+from .types import RecursiveType, SurQLAnyRecord, SurQLField, SurQLType, SurQLNullable
 from datetime import datetime
 
 cache = Cache()
@@ -28,6 +28,8 @@ def parseSimpleTypes(_type: Type) -> SurQLType | None:
         return SurQLType.NULL
     if (_type == NoneType):
         return SurQLType.OPTIONAL
+    if (_type == SurQLAnyRecord):
+        return SurQLType.ANY_RECORD
     return None
 
 def parseType(_type: Type) -> RecursiveType:
