@@ -101,6 +101,6 @@ def parseFields(model: BaseModel) -> list[SurQLField]:
             _field = cache.get(field.annotation)
         else:
             _field = parseField(field_name, field.annotation)
-            cache.set(field.annotation, _field)
+            #cache.set(field.annotation, _field)
         fields.append(_field)
     return fields
