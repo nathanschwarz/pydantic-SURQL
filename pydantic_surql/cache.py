@@ -1,6 +1,8 @@
 from typing import TypedDict, Type
 from .types import SurQLField
 
+CacheKey = tuple[str, Type]
+
 class Cache():
     """
         A simple cache system maping a Type to a SurQLField
@@ -9,21 +11,21 @@ class Cache():
         """
             Initialize the cache
         """
-        self.cache: TypedDict[Type, SurQLField] = {}
+        self.cache: TypedDict[CacheKey, SurQLField] = {}
 
-    def get(self, key: str):
+    def get(self, key: CacheKey):
         """
             Get a key from the cache
         """
         return self.cache.get(key)
 
-    def set(self, key: str, value: TypedDict):
+    def set(self, key: CacheKey, value: TypedDict):
         """
             Set a key in the cache
         """
         self.cache[key] = value
 
-    def has(self, key: str):
+    def has(self, key: CacheKey):
         """
             Check if the cache has a key
         """
