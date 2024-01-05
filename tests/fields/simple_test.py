@@ -3,13 +3,13 @@ from typing import Any, Optional
 from pydantic_surql.parsers import parseField
 from pydantic_surql.types import SurQLNullable, SurQLAnyRecord, SurQLType
 
-class TestSimpleArrayField:
+class TestSimpleFields:
     def test_str(self):
         """
             test string type parsing
         """
         field = parseField("test", str)
-        assert set(field.types) == set([SurQLType.STRING])
+        assert field.types == [SurQLType.STRING]
         assert field.name is "test"
         assert field.recordLink is None
 
@@ -18,7 +18,7 @@ class TestSimpleArrayField:
             test float type parsing
         """
         field = parseField("test", float)
-        assert set(field.types) == set([SurQLType.NUMBER])
+        assert field.types == [SurQLType.NUMBER]
         assert field.name is "test"
         assert field.recordLink is None
 
@@ -27,7 +27,7 @@ class TestSimpleArrayField:
             test int type parsing
         """
         field = parseField("test", int)
-        assert set(field.types) == set([SurQLType.NUMBER])
+        assert field.types == [SurQLType.NUMBER]
         assert field.name is "test"
         assert field.recordLink is None
 
@@ -36,7 +36,7 @@ class TestSimpleArrayField:
             test bool type parsing
         """
         field = parseField("test", bool)
-        assert set(field.types) == set([SurQLType.BOOLEAN])
+        assert field.types == [SurQLType.BOOLEAN]
         assert field.name is "test"
         assert field.recordLink is None
 
@@ -45,7 +45,7 @@ class TestSimpleArrayField:
             test date type parsing
         """
         field = parseField("test", datetime)
-        assert set(field.types) == set([SurQLType.DATE])
+        assert field.types == [SurQLType.DATE]
         assert field.name is "test"
         assert field.recordLink is None
 
@@ -54,7 +54,7 @@ class TestSimpleArrayField:
             test nullable type parsing
         """
         field = parseField("test", SurQLNullable)
-        assert set(field.types) == set([SurQLType.NULL])
+        assert field.types == [SurQLType.NULL]
         assert field.name is "test"
         assert field.recordLink is None
 
@@ -63,7 +63,7 @@ class TestSimpleArrayField:
             test optional type parsing
         """
         field = parseField("test", Optional[str])
-        assert set(field.types) == set([SurQLType.OPTIONAL, SurQLType.STRING])
+        assert field.types == [SurQLType.STRING, SurQLType.OPTIONAL]
         assert field.name is "test"
         assert field.recordLink is None
 
@@ -72,7 +72,7 @@ class TestSimpleArrayField:
             test optional nullable type parsing
         """
         field = parseField("test", Optional[str | SurQLNullable])
-        assert set(field.types) == set([SurQLType.OPTIONAL, SurQLType.NULL, SurQLType.STRING])
+        assert field.types == [SurQLType.STRING, SurQLType.NULL, SurQLType.OPTIONAL]
         assert field.name is "test"
         assert field.recordLink is None
 
@@ -81,7 +81,7 @@ class TestSimpleArrayField:
             test any type parsing
         """
         field = parseField("test", Any)
-        assert set(field.types) == set([SurQLType.ANY])
+        assert field.types == [SurQLType.ANY]
         assert field.name is "test"
         assert field.recordLink is None
 
@@ -90,7 +90,7 @@ class TestSimpleArrayField:
             test dict type parsing
         """
         field = parseField("test", dict)
-        assert set(field.types) == set([SurQLType.DICT])
+        assert field.types == [SurQLType.DICT]
         assert field.name is "test"
         assert field.recordLink is None
 
@@ -99,7 +99,7 @@ class TestSimpleArrayField:
             test multi type parsing
         """
         field = parseField("test", str | int | float | bool | datetime | dict)
-        assert set(field.types) == set([SurQLType.STRING, SurQLType.NUMBER, SurQLType.BOOLEAN, SurQLType.DATE, SurQLType.DICT])
+        assert field.types == [SurQLType.STRING, SurQLType.NUMBER, SurQLType.NUMBER, SurQLType.BOOLEAN, SurQLType.DATE, SurQLType.DICT]
         assert field.name is "test"
         assert field.recordLink is None
 
@@ -108,6 +108,24 @@ class TestSimpleArrayField:
             test SurQLAnyRecord type parsing
         """
         field = parseField("test", SurQLAnyRecord)
-        assert set(field.types) == set([SurQLType.ANY_RECORD])
+        assert field.types == [SurQLType.ANY_RECORD]
+        assert field.name is "test"
+        assert field.recordLink is None
+
+    def test_nested(self):
+        """
+            test nested type parsing
+        """
+        field = parseField("test", list[list[str]])
+        assert field.types == [[[SurQLType.STRING]]]
+        assert field.name is "test"
+        assert field.recordLink is None
+
+    def test_nested_nested(self):
+        """
+            test nested nested type parsing
+        """
+        field = parseField("test", list[list[list[str]]])
+        assert field.types == [[[[SurQLType.STRING]]]]
         assert field.name is "test"
         assert field.recordLink is None

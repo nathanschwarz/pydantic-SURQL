@@ -9,9 +9,6 @@ readme = "README.md"
 python = "^3.11"
 pydantic = "^2.5.3"
 
-[tool.poetry.scripts]
-test = "tests:main"
-
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.4"
 
