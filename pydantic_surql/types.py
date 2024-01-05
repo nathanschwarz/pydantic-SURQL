@@ -98,7 +98,7 @@ class SurQLField(BaseModel):
         return [cls._f_string(field_name, table_name, "|".join(res), isFlexible)] + nextFields
 
 
-    def to_surql(self, table_name: str) -> List[str]:
+    def SDL(self, table_name: str) -> List[str]:
         """return a SDL field definition"""
         fieldTypes = SurQLField.surqlFromTypes(table_name, self.name, self.types)
         return "\n".join(fieldTypes)
@@ -117,7 +117,7 @@ class SurQLIndex(BaseModel):
     fields: list[str]
     unique: bool = False
 
-    def to_surql(self, table_name: str) -> str:
+    def SDL(self, table_name: str) -> str:
         """
             return a SDL index definition
         """
@@ -134,7 +134,7 @@ class SurQLView(BaseModel):
     where: list[str]
     group_by: list[str]
 
-    def to_surql(self) -> str:
+    def SDL(self) -> str:
         """
             return a SDL view definition
         """
@@ -174,21 +174,21 @@ class SurQLTable(BaseModel):
         _definitions = [
             "DEFINE TABLE",
             self.name,
-            self.config.asView.to_surql() if self.config.asView is not None else None,
+            self.config.asView.SDL() if self.config.asView is not None else None,
             "DROP" if self.config.drop else None,
             "SCHEMAFULL" if self.config.strict else "SCHEMALESS",
             f"CHANGEFEED {self.config.changeFeed}" if self.config.changeFeed is not None else None,
         ]
         return " ".join([e for e in _definitions if e is not None]) + ';'
 
-    def to_surql(self):
+    def SDL(self):
         """return a SDL table definition with all the fields SDL definitions"""
         res = [self._table_def()]
         if (self.config.asView is None):
             for field in self.fields:
-                res.append(field.to_surql(self.name))
+                res.append(field.SDL(self.name))
             for index in self.config.indexes:
-                res.append(index.to_surql(self.name))
+                res.append(index.SDL(self.name))
         return "\n".join(res)
 
     __hash__ = object.__hash__

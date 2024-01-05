@@ -25,7 +25,7 @@ class TestSimpleFields:
         __type = Optional[_type] if optional else _type
         field = parseField(F_NAME, __type)
         self.simple_field_check(field, [surql_type], optional)
-        assert field.to_surql(T_NAME) == "\n".join([
+        assert field.SDL(T_NAME) == "\n".join([
             "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, f"optional<{surql_type.value}>" if optional else surql_type.value),
         ])
 
@@ -95,7 +95,7 @@ class TestSimpleFields:
         """
         field = parseField(F_NAME, dict)
         self.simple_field_check(field, [SurQLType.DICT])
-        assert field.to_surql(T_NAME) == "\n".join([
+        assert field.SDL(T_NAME) == "\n".join([
             "DEFINE FIELD %s ON TABLE %s FLEXIBLE TYPE %s;" % (F_NAME, T_NAME, "object"),
         ])
 
@@ -107,6 +107,6 @@ class TestSimpleFields:
         common_types = [SurQLType.STRING, SurQLType.NUMBER, SurQLType.NUMBER, SurQLType.BOOLEAN, SurQLType.DATE, SurQLType.DICT]
         SDL_types = [SurQLType.STRING.value, SurQLType.NUMBER.value, SurQLType.NUMBER.value, SurQLType.BOOLEAN.value, SurQLType.DATE.value, SurQLType.OBJECT.value]
         self.simple_field_check(field, common_types)
-        assert field.to_surql(T_NAME) == "\n".join([
+        assert field.SDL(T_NAME) == "\n".join([
             "DEFINE FIELD %s ON TABLE %s FLEXIBLE TYPE %s;" % (F_NAME, T_NAME, "|".join(SDL_types)),
         ])

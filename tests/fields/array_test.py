@@ -25,7 +25,7 @@ class TestSimpleArrayFields:
         __type = Optional[list[_type]] if optional else list[_type]
         field = parseField(F_NAME, __type)
         self.simple_field_check(field, [[surql_type]], optional)
-        assert field.to_surql(T_NAME) == "\n".join([
+        assert field.SDL(T_NAME) == "\n".join([
             "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "optional<array>" if optional else "array"),
             "DEFINE FIELD %s.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, surql_type.value)
         ])
@@ -91,7 +91,7 @@ class TestSimpleArrayFields:
         """
         field = parseField(F_NAME, Optional[list[str | SurQLNullable]])
         self.simple_field_check(field, [[SurQLType.STRING, SurQLType.NULL]], True)
-        assert field.to_surql(T_NAME) == "\n".join([
+        assert field.SDL(T_NAME) == "\n".join([
             "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "optional<array>"),
             "DEFINE FIELD %s.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "string|null"),
         ])
@@ -102,7 +102,7 @@ class TestSimpleArrayFields:
         """
         field = parseField(F_NAME, list[dict])
         self.simple_field_check(field, [[SurQLType.DICT]])
-        assert field.to_surql(T_NAME) == "\n".join([
+        assert field.SDL(T_NAME) == "\n".join([
             "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "array"),
             "DEFINE FIELD %s.* ON TABLE %s FLEXIBLE TYPE %s;" % (F_NAME, T_NAME, "object"),
         ])
@@ -115,7 +115,7 @@ class TestSimpleArrayFields:
         common_types = [[SurQLType.STRING, SurQLType.NUMBER, SurQLType.NUMBER, SurQLType.BOOLEAN, SurQLType.DATE, SurQLType.DICT]]
         SDL_types = [SurQLType.STRING.value, SurQLType.NUMBER.value, SurQLType.NUMBER.value, SurQLType.BOOLEAN.value, SurQLType.DATE.value, SurQLType.OBJECT.value]
         self.simple_field_check(field, common_types)
-        assert field.to_surql(T_NAME) == "\n".join([
+        assert field.SDL(T_NAME) == "\n".join([
             "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "array"),
             "DEFINE FIELD %s.* ON TABLE %s FLEXIBLE TYPE %s;" % (F_NAME, T_NAME, "|".join(SDL_types)),
         ])
@@ -126,7 +126,7 @@ class TestSimpleArrayFields:
         """
         field = parseField(F_NAME, list[list[str]])
         self.simple_field_check(field, [[[SurQLType.STRING]]])
-        assert field.to_surql(T_NAME) == "\n".join([
+        assert field.SDL(T_NAME) == "\n".join([
             "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "array"),
             "DEFINE FIELD %s.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "array"),
             "DEFINE FIELD %s.*.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "string"),
@@ -140,7 +140,7 @@ class TestSimpleArrayFields:
         """
         field = parseField(F_NAME, list[list[list[str]]])
         self.simple_field_check(field, [[[[SurQLType.STRING]]]])
-        assert field.to_surql(T_NAME) == "\n".join([
+        assert field.SDL(T_NAME) == "\n".join([
             "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "array"),
             "DEFINE FIELD %s.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "array"),
             "DEFINE FIELD %s.*.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "array"),

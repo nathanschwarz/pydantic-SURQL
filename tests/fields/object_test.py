@@ -69,7 +69,7 @@ def test_object():
         # recursive_check(field.types[0], truth)
     #recursive_check(field.types[0], truth)
 
-    # assert field.to_surql("test_table") == "\n".join([
+    # assert field.SDL("test_table") == "\n".join([
     #     "DEFINE FIELD test ON TABLE test_table TYPE object;",
     #     "DEFINE FIELD test.name ON TABLE test_table TYPE string;",
     #     "DEFINE FIELD test.age ON TABLE test_table TYPE number;",
