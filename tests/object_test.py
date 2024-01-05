@@ -64,20 +64,34 @@ def test_object():
         SurQLField(name="details_arr", types=[[details]]),
     ]
     check_fields(fields, truth)
-
-
-        # recursive_check(field.types[0], truth)
-    #recursive_check(field.types[0], truth)
-
-    # assert field.SDL("test_table") == "\n".join([
-    #     "DEFINE FIELD test ON TABLE test_table TYPE object;",
-    #     "DEFINE FIELD test.name ON TABLE test_table TYPE string;",
-    #     "DEFINE FIELD test.age ON TABLE test_table TYPE number;",
-    #     "DEFINE FIELD test.score ON TABLE test_table TYPE optional<number>;",
-    #     "DEFINE FIELD test.is_active ON TABLE test_table TYPE boolean;",
-    #     "DEFINE FIELD test.birthday ON TABLE test_table TYPE date;",
-    #     "DEFINE FIELD test.nickname ON TABLE test_table TYPE optional<string>;",
-    #     "DEFINE FIELD test.details ON TABLE test_table TYPE object;",
-    #     "DEFINE FIELD test.details.address ON TABLE test_table TYPE string;",
-    #     "DEFINE FIELD test.details.phone ON TABLE test_table TYPE string;",
-    # ])
+    table = "test_table"
+    detailsSDL = [
+        "DEFINE FIELD %s.address ON TABLE %s TYPE string;",
+        "DEFINE FIELD %s.phone ON TABLE %s TYPE string;",
+        "DEFINE FIELD %s.details ON TABLE %s TYPE object;",
+        "DEFINE FIELD %s.details.country ON TABLE %s TYPE string;",
+        "DEFINE FIELD %s.details.city ON TABLE %s TYPE string;",
+    ]
+    assert [field.SDL(table) for field in fields[0:6]] == [
+        "DEFINE FIELD name ON TABLE test_table TYPE string;",
+        "DEFINE FIELD age ON TABLE test_table TYPE number;",
+        "DEFINE FIELD score ON TABLE test_table TYPE number|null;",
+        "DEFINE FIELD is_active ON TABLE test_table TYPE bool;",
+        "DEFINE FIELD birthday ON TABLE test_table TYPE datetime;",
+        "DEFINE FIELD nickname ON TABLE test_table TYPE optional<string>;",
+    ]
+    assert fields[6].SDL(table) == "\n".join(
+        ["DEFINE FIELD %s ON TABLE %s TYPE %s;" % ("details", table, "object")] +
+        [e % ("details", table) for e in detailsSDL]
+    )
+    assert fields[7].SDL(table) == "\n".join(
+        ["DEFINE FIELD %s ON TABLE %s TYPE %s;" % ("details_opt", table, "optional<object>")] +
+        [e % ("details_opt", table) for e in detailsSDL]
+    )
+    assert fields[8].SDL(table) == "\n".join(
+        [
+            "DEFINE FIELD %s ON TABLE %s TYPE %s;" % ("details_arr", table, "array"),
+            "DEFINE FIELD %s.* ON TABLE %s TYPE %s;" % ("details_arr", table, "object"),
+        ] +
+        [e % ("details_arr.*", table) for e in detailsSDL]
+    )
