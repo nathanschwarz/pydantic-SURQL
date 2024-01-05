@@ -1,131 +1,104 @@
 from datetime import datetime
 from typing import Any, Optional
 from pydantic_surql.parsers import parseField
-from pydantic_surql.types import SurQLNullable, SurQLAnyRecord, SurQLType
+from pydantic_surql.types import SurQLNullable, SurQLAnyRecord, SurQLType, SurQLField
+
+F_NAME = "test"
+T_NAME = "test_table"
 
 class TestSimpleFields:
+    def simple_field_check(self, field: SurQLField, types: list[SurQLType], optional: bool = False):
+        """
+            common test for type parsing
+        """
+        if (optional):
+            assert field.types == [*types, SurQLType.OPTIONAL]
+        else:
+            assert field.types == types
+        assert field.name is F_NAME
+        assert field.recordLink is None
+
+    def common_check(self, _type: type, surql_type: SurQLType, optional: bool = False):
+        """
+            common test for type parsing
+        """
+        __type = Optional[_type] if optional else _type
+        field = parseField(F_NAME, __type)
+        self.simple_field_check(field, [surql_type], optional)
+        assert field.to_surql(T_NAME) == "\n".join([
+            "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, f"optional<{surql_type.value}>" if optional else surql_type.value),
+        ])
+
     def test_str(self):
         """
             test string type parsing
         """
-        field = parseField("test", str)
-        assert field.types == [SurQLType.STRING]
-        assert field.name is "test"
-        assert field.recordLink is None
+        self.common_check(str, SurQLType.STRING)
 
     def test_float(self):
         """
             test float type parsing
         """
-        field = parseField("test", float)
-        assert field.types == [SurQLType.NUMBER]
-        assert field.name is "test"
-        assert field.recordLink is None
+        self.common_check(float, SurQLType.NUMBER)
 
     def test_int(self):
         """
             test int type parsing
         """
-        field = parseField("test", int)
-        assert field.types == [SurQLType.NUMBER]
-        assert field.name is "test"
-        assert field.recordLink is None
+        self.common_check(int, SurQLType.NUMBER)
 
     def test_bool(self):
         """
             test bool type parsing
         """
-        field = parseField("test", bool)
-        assert field.types == [SurQLType.BOOLEAN]
-        assert field.name is "test"
-        assert field.recordLink is None
+        self.common_check(bool, SurQLType.BOOLEAN)
 
     def test_date(self):
         """
             test date type parsing
         """
-        field = parseField("test", datetime)
-        assert field.types == [SurQLType.DATE]
-        assert field.name is "test"
-        assert field.recordLink is None
+        self.common_check(datetime, SurQLType.DATE)
 
     def test_nullable(self):
         """
             test nullable type parsing
         """
-        field = parseField("test", SurQLNullable)
-        assert field.types == [SurQLType.NULL]
-        assert field.name is "test"
-        assert field.recordLink is None
+        self.common_check(SurQLNullable, SurQLType.NULL)
 
     def test_optional(self):
         """
             test optional type parsing
         """
-        field = parseField("test", Optional[str])
-        assert field.types == [SurQLType.STRING, SurQLType.OPTIONAL]
-        assert field.name is "test"
-        assert field.recordLink is None
+        self.common_check(str, SurQLType.STRING, True)
 
     def test_optional_nullable(self):
         """
             test optional nullable type parsing
         """
-        field = parseField("test", Optional[str | SurQLNullable])
-        assert field.types == [SurQLType.STRING, SurQLType.NULL, SurQLType.OPTIONAL]
-        assert field.name is "test"
-        assert field.recordLink is None
+        self.common_check(SurQLNullable, SurQLType.NULL, True)
 
     def test_any(self):
         """
             test any type parsing
         """
-        field = parseField("test", Any)
-        assert field.types == [SurQLType.ANY]
-        assert field.name is "test"
-        assert field.recordLink is None
-
-    def test_dict(self):
-        """
-            test dict type parsing
-        """
-        field = parseField("test", dict)
-        assert field.types == [SurQLType.DICT]
-        assert field.name is "test"
-        assert field.recordLink is None
-
-    def test_multi(self):
-        """
-            test multi type parsing
-        """
-        field = parseField("test", str | int | float | bool | datetime | dict)
-        assert field.types == [SurQLType.STRING, SurQLType.NUMBER, SurQLType.NUMBER, SurQLType.BOOLEAN, SurQLType.DATE, SurQLType.DICT]
-        assert field.name is "test"
-        assert field.recordLink is None
+        self.common_check(Any, SurQLType.ANY)
 
     def test_any_record(self):
         """
             test SurQLAnyRecord type parsing
         """
-        field = parseField("test", SurQLAnyRecord)
-        assert field.types == [SurQLType.ANY_RECORD]
-        assert field.name is "test"
-        assert field.recordLink is None
+        self.common_check(SurQLAnyRecord, SurQLType.ANY_RECORD)
 
-    def test_nested(self):
+    def test_dict(self):
         """
-            test nested type parsing
+            test dict type parsing
         """
-        field = parseField("test", list[list[str]])
-        assert field.types == [[[SurQLType.STRING]]]
-        assert field.name is "test"
-        assert field.recordLink is None
+        field = parseField(F_NAME, dict)
+        self.simple_field_check(field, [SurQLType.DICT])
 
-    def test_nested_nested(self):
+    def test_multi(self):
         """
-            test nested nested type parsing
+            test multi type parsing
         """
-        field = parseField("test", list[list[list[str]]])
-        assert field.types == [[[[SurQLType.STRING]]]]
-        assert field.name is "test"
-        assert field.recordLink is None
+        field = parseField(F_NAME, str | int | float | bool | datetime | dict)
+        self.simple_field_check(field, [SurQLType.STRING, SurQLType.NUMBER, SurQLType.NUMBER, SurQLType.BOOLEAN, SurQLType.DATE, SurQLType.DICT])
