@@ -1,32 +1,7 @@
 from typing import Set
 from pydantic import BaseModel, Field, field_validator
 from .field import SurQLField
-
-class SurQLIndex(BaseModel):
-    """
-        A pydantic SurQL index definition
-        TODO: implement search indexes
-    """
-    name: str
-    fields: list[str]
-    unique: bool = False
-
-    def SDL(self, table_name: str) -> str:
-        """
-            return a SDL index definition
-        """
-        _def = [
-            "DEFINE INDEX",
-            self.name,
-            "ON TABLE",
-            table_name,
-            "UNIQUE" if self.unique else None,
-            "FIELDS",
-            f"{','.join(self.fields)}",
-        ]
-        return " ".join([e for e in _def if e is not None]) + ';'
-
-    __hash__ = object.__hash__
+from .indexes import SurQLIndex
 
 class SurQLView(BaseModel):
     """
@@ -67,6 +42,7 @@ class SurQLTableConfig(BaseModel):
     indexes: list[SurQLIndex] = Field(default=[], description="table indexes definitions")
 
     @field_validator("indexes")
+    @classmethod
     def indexes_validator(cls, v):
         """
             validate indexes
