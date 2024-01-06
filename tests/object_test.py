@@ -1,8 +1,10 @@
 from datetime import datetime
 from typing import Any, Optional
-from pydantic_surql.parsers import parseFields
+from pydantic_surql.parser import SurQLParser
 from pydantic_surql.types import SurQLNullable, SurQLType, SurQLField
 from pydantic import BaseModel
+
+Parser = SurQLParser()
 
 class ChildChildObject(BaseModel):
     country: str
@@ -41,7 +43,7 @@ def check_fields(fields: list[SurQLField], truth: list[SurQLField]):
             check_fields(field.types[0].types, truth[idx].types[0].types)
 
 def test_object():
-    fields = parseFields(ParentObject)
+    fields = Parser.from_fields(ParentObject)
     details = SurQLField(name=None, types=[
             SurQLField(name="address", types=[SurQLType.STRING]),
             SurQLField(name="phone", types=[SurQLType.STRING]),

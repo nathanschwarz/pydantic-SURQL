@@ -1,8 +1,10 @@
 from datetime import datetime
 from typing import Any, Optional, Type
-from pydantic_surql.parsers import parseField
+from pydantic_surql.parser import SurQLParser
 from pydantic_surql.types import SurQLField, SurQLNullable, SurQLAnyRecord, SurQLType
 
+
+Parser = SurQLParser()
 F_NAME = "test"
 T_NAME = "test_table"
 
@@ -23,7 +25,7 @@ class TestSimpleArrayFields:
             common test for array<type> type parsing and SDL generation
         """
         __type = Optional[list[_type]] if optional else list[_type]
-        field = parseField(F_NAME, __type)
+        field = Parser.from_field(F_NAME, __type)
         self.simple_field_check(field, [[surql_type]], optional)
         assert field.SDL(T_NAME) == "\n".join([
             "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "optional<array>" if optional else "array"),
@@ -89,7 +91,7 @@ class TestSimpleArrayFields:
         """
             test optional<array<str | null>> nullable type parsing and SDL generation
         """
-        field = parseField(F_NAME, Optional[list[str | SurQLNullable]])
+        field = Parser.from_field(F_NAME, Optional[list[str | SurQLNullable]])
         self.simple_field_check(field, [[SurQLType.STRING, SurQLType.NULL]], True)
         assert field.SDL(T_NAME) == "\n".join([
             "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "optional<array>"),
@@ -100,7 +102,7 @@ class TestSimpleArrayFields:
         """
             test array<dict> type parsing and SDL generation
         """
-        field = parseField(F_NAME, list[dict])
+        field = Parser.from_field(F_NAME, list[dict])
         self.simple_field_check(field, [[SurQLType.DICT]])
         assert field.SDL(T_NAME) == "\n".join([
             "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "array"),
@@ -111,7 +113,7 @@ class TestSimpleArrayFields:
         """
             test array<str | int | float | bool | datetime | dict> type parsing and SDL generation
         """
-        field = parseField(F_NAME, list[str | int | float | bool | datetime | dict])
+        field = Parser.from_field(F_NAME, list[str | int | float | bool | datetime | dict])
         common_types = [[SurQLType.STRING, SurQLType.NUMBER, SurQLType.NUMBER, SurQLType.BOOLEAN, SurQLType.DATE, SurQLType.DICT]]
         SDL_types = [SurQLType.STRING.value, SurQLType.NUMBER.value, SurQLType.NUMBER.value, SurQLType.BOOLEAN.value, SurQLType.DATE.value, SurQLType.OBJECT.value]
         self.simple_field_check(field, common_types)
@@ -124,7 +126,7 @@ class TestSimpleArrayFields:
         """
             test array<array<str>> type parsing
         """
-        field = parseField(F_NAME, list[list[str]])
+        field = Parser.from_field(F_NAME, list[list[str]])
         self.simple_field_check(field, [[[SurQLType.STRING]]])
         assert field.SDL(T_NAME) == "\n".join([
             "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "array"),
@@ -138,7 +140,7 @@ class TestSimpleArrayFields:
         """
             test array<array<array<str>>> type parsing
         """
-        field = parseField(F_NAME, list[list[list[str]]])
+        field = Parser.from_field(F_NAME, list[list[list[str]]])
         self.simple_field_check(field, [[[[SurQLType.STRING]]]])
         assert field.SDL(T_NAME) == "\n".join([
             "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "array"),

@@ -1,10 +1,10 @@
 from datetime import datetime
 from typing import Any, Optional
-from pydantic_surql import model_to_surql
-from pydantic_surql.parsers import parseFields
+from pydantic_surql.parser import SurQLParser
 from pydantic_surql.types import SurQLNullable, SurQLType, SurQLField
 from pydantic import BaseModel
 
+Parser = SurQLParser()
 
 class ChildObject(BaseModel):
     address: str
@@ -44,9 +44,9 @@ def test_record():
         Test the record type
     """
     #mandatory to mark the child table object as a collection internally
-    childTable = model_to_surql("child_table", ChildObject)
-    table = model_to_surql("parent_table", ParentObject)
-    fields = parseFields(ParentObject)
+    childTable = Parser.from_model("child_table", ChildObject)
+    table = Parser.from_model("parent_table", ParentObject)
+    fields = Parser.from_fields(ParentObject)
     details = SurQLField(name=None, types=[SurQLType.RECORD], recordLink="child_table")
     truth = [
         SurQLField(name="name", types=[SurQLType.STRING]),

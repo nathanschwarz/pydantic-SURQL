@@ -1,10 +1,10 @@
 from datetime import datetime
 from typing import Any, Optional
-from pydantic_surql import model_to_surql
-from pydantic_surql.parsers import parseFields
+from pydantic_surql import SurQLParser
 from pydantic_surql.types import SurQLIndex, SurQLNullable, SurQLTableConfig, SurQLType, SurQLField, SurQLView
 from pydantic import BaseModel
 
+Parser = SurQLParser()
 class TableModel(BaseModel):
     name: str
     age: int
@@ -19,7 +19,7 @@ def test_schemafull_table():
     """
     name = "test_table"
     #mandatory to mark the child table object as a collection internally
-    table = model_to_surql(name, TableModel, SurQLTableConfig(strict=True))
+    table = Parser.from_model(name, TableModel, SurQLTableConfig(strict=True))
     assert table.name == name
     assert table._table_def() == "DEFINE TABLE %s SCHEMAFULL;" % name
 
@@ -29,7 +29,7 @@ def test_schemaless_table():
     """
     name = "test_table"
     #mandatory to mark the child table object as a collection internally
-    table = model_to_surql(name, TableModel, config=SurQLTableConfig(strict=False))
+    table = Parser.from_model(name, TableModel, config=SurQLTableConfig(strict=False))
     assert table.name == name
     assert table._table_def() == "DEFINE TABLE %s SCHEMALESS;" % name
 
@@ -40,7 +40,7 @@ def test_table_view():
     name = "test_table"
     view_name = "test_view"
     #mandatory to mark the child table object as a collection internally
-    table = model_to_surql(view_name, TableModel, config=SurQLTableConfig(asView=SurQLView(select=["name", "age"], from_t=[name], where=["age > 18"], group_by=["name"])))
+    table = Parser.from_model(view_name, TableModel, config=SurQLTableConfig(asView=SurQLView(select=["name", "age"], from_t=[name], where=["age > 18"], group_by=["name"])))
     assert table.name == view_name
     assert table._table_def() == "DEFINE TABLE %s AS SELECT name,age FROM %s WHERE age > 18 GROUP BY name;" % (view_name, name)
 
@@ -50,7 +50,7 @@ def test_table_drop():
     """
     name = "test_table"
     #mandatory to mark the child table object as a collection internally
-    table = model_to_surql(name, TableModel, config=SurQLTableConfig(drop=True))
+    table = Parser.from_model(name, TableModel, config=SurQLTableConfig(drop=True))
     assert table.name == name
     assert table._table_def() == "DEFINE TABLE %s DROP SCHEMAFULL;" % name
 
@@ -61,7 +61,7 @@ def test_table_change_feed():
     name = "test_table"
     changeFeed = "1d"
     #mandatory to mark the child table object as a collection internally
-    table = model_to_surql(name, TableModel, config=SurQLTableConfig(changeFeed=changeFeed))
+    table = Parser.from_model(name, TableModel, config=SurQLTableConfig(changeFeed=changeFeed))
     assert table.name == name
     assert table._table_def() == "DEFINE TABLE %s SCHEMAFULL CHANGEFEED %s;" % (name, changeFeed)
 
@@ -72,7 +72,7 @@ def test_table_indexes():
     """
     name = "test_table"
     #mandatory to mark the child table object as a collection internally
-    table = model_to_surql(name, TableModel, config=SurQLTableConfig(indexes=[
+    table = Parser.from_model(name, TableModel, config=SurQLTableConfig(indexes=[
         SurQLIndex(name="test_index", fields=["name", "age"]),
         SurQLIndex(name="test_index2", fields=["nickname"], unique=True),
     ]))
