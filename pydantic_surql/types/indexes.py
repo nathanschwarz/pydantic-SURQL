@@ -37,7 +37,7 @@ class SurQLAnalyzer(BaseModel):
     """
         A pydantic SurQL analyzer definition
     """
-    name: str
+    name: str = Field(min_length=1)
     tokenizers: list[SurQLTokenizers] = Field(min_length=1)
     filters: list[str] = []
 
@@ -71,7 +71,7 @@ class SurQLIndex(BaseModel):
         A pydantic SurQL index definition
         TODO: implement search indexes
     """
-    name: str
+    name: str = Field(min_length=1)
     fields: list[str]
 
     def baseSDL(self, table_name: str) -> list[str]:

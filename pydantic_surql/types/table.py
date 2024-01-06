@@ -54,7 +54,7 @@ class SurQLTable(BaseModel):
     """
         A pydantic SurQL table definition
     """
-    name: str
+    name: str = Field(min_length=1)
     fields: list[SurQLField]
     config: SurQLTableConfig = SurQLTableConfig()
 
