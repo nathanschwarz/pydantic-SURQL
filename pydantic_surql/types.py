@@ -1,7 +1,7 @@
 from typing import List, Type, Set, Union
 from enum import Enum
 from typing import Optional
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from typing_extensions import TypeAliasType
 
 """
@@ -121,7 +121,16 @@ class SurQLIndex(BaseModel):
         """
             return a SDL index definition
         """
-        return f"DEFINE INDEX {self.name} ON TABLE {table_name} {'UNIQUE' if self.unique else ''} FIELDS ({','.join(self.fields)});"
+        _def = [
+            "DEFINE INDEX",
+            self.name,
+            "ON TABLE",
+            table_name,
+            "UNIQUE" if self.unique else None,
+            "FIELDS",
+            f"{','.join(self.fields)}",
+        ]
+        return " ".join([e for e in _def if e is not None]) + ';'
 
     __hash__ = object.__hash__
 
@@ -161,7 +170,15 @@ class SurQLTableConfig(BaseModel):
     strict: bool = Field(default=True, description="schemafull|schemaless")
     changeFeed: str | None = Field(default=None, description="changefeed definition")
     drop: bool = Field(default=False, description="set table in DROP mode")
-    indexes: Set[SurQLIndex] = Field(default_factory=set, description="table indexes definitions")
+    indexes: list[SurQLIndex] = Field(default=[], description="table indexes definitions")
+
+    @field_validator("indexes")
+    def indexes_validator(cls, v):
+        """
+            validate indexes
+        """
+        assert len(v) == len(set([index.name for index in v])), "indexes names must be unique"
+        return v
 
 
 class SurQLTable(BaseModel):
