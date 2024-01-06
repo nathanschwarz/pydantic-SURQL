@@ -14,12 +14,31 @@ class TestIndexes:
 
     def test_good_analyzers_filters(self):
         try:
-            analyzer = SurQLAnalyzer(name="test_analyzer", tokenizers=[SurQLTokenizers.BLANK], filters=["lowercase", "ascii", "uppercase", "edgengram(1,2)"])
+            analyzer = SurQLAnalyzer(name="test_analyzer", tokenizers=[SurQLTokenizers.BLANK], filters=[
+                "lowercase",
+                "ascii",
+                "uppercase",
+                "edgengram(1,2)",
+                "snowball(english)",
+                "snowball(french)"
+            ])
         except Exception as e:
             assert False, e
-        return True
 
-
+    def test_bad_analyzers_filters(self):
+        try:
+            analyzer = SurQLAnalyzer(name="test_analyzer", tokenizers=[SurQLTokenizers.BLANK], filters=[
+                "lowercase",
+                "ascii",
+                "uppercase",
+                "edgengram(1,2)",
+                "snowball(english)",
+                "snowball(french)",
+                "bad_filter"
+            ])
+            assert False, "bad filter should raise an exception"
+        except Exception as e:
+            pass
     # def test_search_index():
     #     index = SurQLSearchIndex(name="test_index", fields=["name", "age"], analyzer=SurQLAnalyzer(name="test_analyzer", tokenizers=["unicode"], filters=["lowercase"]))
     #     assert index.SDL("test_table") == "DEFINE INDEX test_index FIELDS name,age ANALYZER test_analyzer;"

@@ -31,7 +31,7 @@ SNOWBALL_LANG: LiteralString = "|".join([
     "tamil",
     "turkish",
 ])
-RE = re.compile(f"^(snowball({SNOWBALL_LANG})|ascii|lowercase|uppercase|edgengram(d+,d+))$")
+RE = re.compile(fr"^snowball\(({SNOWBALL_LANG})\)|ascii|lowercase|uppercase|edgengram\(\d+,\d+\)$")
 
 class SurQLAnalyzer(BaseModel):
     """
