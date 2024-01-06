@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, field_validator
 from .field import SurQLField
-from .indexes import SurQLIndex
+from .indexes import SurQLAnalyzer, SurQLIndex
 
 class SurQLView(BaseModel):
     """
@@ -85,11 +85,12 @@ class SurQLTable(BaseModel):
                 res.append(index.SDL(self.name))
         return "\n".join(res)
 
-class SurQLMapper(BaseModel):
+class SurQLMetadata(BaseModel):
     """
         A simple mapper to store all the SurQL tables definitions generated from pydantic models through the decorator @surql_collection
     """
-    tables: list[SurQLTable]
+    tables: list[SurQLTable] = []
+    analyzers: list[SurQLAnalyzer] = []
 
     @field_validator("tables")
     @classmethod
