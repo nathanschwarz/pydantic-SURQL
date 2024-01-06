@@ -5,7 +5,7 @@ from .types import SurQLTable, SurQLMapper, SurQLTableConfig
 Parser = SurQLParser()
 Mapper = SurQLMapper(tables=[])
 
-def to_surql(name: str, config: SurQLTableConfig = SurQLTableConfig()):
+def surql_collection(name: str, config: SurQLTableConfig = SurQLTableConfig()):
     """
         A simple decorator to convert a pydantic model to a surQL SDL table definition
     """

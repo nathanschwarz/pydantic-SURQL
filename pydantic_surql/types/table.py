@@ -87,7 +87,7 @@ class SurQLTable(BaseModel):
 
 class SurQLMapper(BaseModel):
     """
-        A simple mapper to store all the SurQL tables definitions generated from pydantic models
+        A simple mapper to store all the SurQL tables definitions generated from pydantic models through the decorator @surql_collection
     """
     tables: list[SurQLTable]
 
