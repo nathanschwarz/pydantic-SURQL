@@ -129,8 +129,8 @@ class SurQLView(BaseModel):
     """
         A pydantic SurQL view query definition
     """
-    select: list[str]
-    from_t: list[str]
+    select: list[str] = Field(default=["*"], min_length=1)
+    from_t: list[str] = Field(min_length=1)
     where: list[str]
     group_by: list[str]
 
@@ -138,14 +138,17 @@ class SurQLView(BaseModel):
         """
             return a SDL view definition
         """
-        _definitions = [
+        _def = [
             "AS SELECT",
             ','.join(self.select),
             "FROM",
             ','.join(self.from_t),
-            "WHERE" if len(self.where) > 0 else None,
-        ] + ["GROUP BY ", ','.join(self.group_by)] if len(self.group_by) > 0 else []
-        return " ".join([e for e in _definitions if e is not None]) + ';'
+        ]
+        if (len(self.where) > 0):
+            _def += ["WHERE", ','.join(self.where)]
+        if (len(self.group_by) > 0):
+            _def += ["GROUP BY", ','.join(self.group_by)]
+        return " ".join(_def)
 
 class SurQLTableConfig(BaseModel):
     """
@@ -171,15 +174,20 @@ class SurQLTable(BaseModel):
 
     def _table_def(self):
         """return a SDL schemafull table definition"""
-        _definitions = [
+        _def = [
             "DEFINE TABLE",
             self.name,
-            self.config.asView.SDL() if self.config.asView is not None else None,
-            "DROP" if self.config.drop else None,
-            "SCHEMAFULL" if self.config.strict else "SCHEMALESS",
-            f"CHANGEFEED {self.config.changeFeed}" if self.config.changeFeed is not None else None,
         ]
-        return " ".join([e for e in _definitions if e is not None]) + ';'
+        if (self.config.asView is not None):
+            _def += [self.config.asView.SDL()]
+        else:
+            _def += [
+                "DROP" if self.config.drop else None,
+                "SCHEMAFULL" if self.config.strict else "SCHEMALESS",
+                f"CHANGEFEED {self.config.changeFeed}" if self.config.changeFeed is not None else None,
+            ]
+            _def = [e for e in _def if e is not None]
+        return " ".join(_def) + ';'
 
     def SDL(self):
         """return a SDL table definition with all the fields SDL definitions"""
