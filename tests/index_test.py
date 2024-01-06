@@ -43,6 +43,20 @@ class TestIndexes:
         except Exception as e:
             pass
 
-    # def test_search_index():
-    #     index = SurQLSearchIndex(name="test_index", fields=["name", "age"], analyzer=SurQLAnalyzer(name="test_analyzer", tokenizers=["unicode"], filters=["lowercase"]))
-    #     assert index.SDL("test_table") == "DEFINE INDEX test_index FIELDS name,age ANALYZER test_analyzer;"
+    def test_simple_search_index(self):
+        analyzer = SurQLAnalyzer(name="test_analyzer", tokenizers=[SurQLTokenizers.BLANK], filters=["lowercase"])
+        index = SurQLSearchIndex(name="test_index", fields=["name", "age"], analyzer=analyzer)
+        table = "test_table"
+        assert index.SDL(table) == "DEFINE INDEX %s ON TABLE %s FIELDS name,age SEARCH ANALYZER %s;" % (index.name, table, analyzer.name)
+
+    def test_hightlights_search_index(self):
+        analyzer = SurQLAnalyzer(name="test_analyzer", tokenizers=[SurQLTokenizers.BLANK], filters=["lowercase"])
+        index = SurQLSearchIndex(name="test_index", fields=["name", "age"], analyzer=analyzer, highlights=True)
+        table = "test_table"
+        assert index.SDL(table) == "DEFINE INDEX %s ON TABLE %s FIELDS name,age SEARCH ANALYZER %s HIGHLIGHTS;" % (index.name, table, analyzer.name)
+
+    def test_BM25_search_index(self):
+        analyzer = SurQLAnalyzer(name="test_analyzer", tokenizers=[SurQLTokenizers.BLANK], filters=["lowercase"])
+        index = SurQLSearchIndex(name="test_index", fields=["name", "age"], analyzer=analyzer, bm25=(1.2, 0.75))
+        table = "test_table"
+        assert index.SDL(table) == "DEFINE INDEX %s ON TABLE %s FIELDS name,age SEARCH ANALYZER %s BM25(1.2,0.75);" % (index.name, table, analyzer.name)

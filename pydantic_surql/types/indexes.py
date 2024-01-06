@@ -108,7 +108,7 @@ class SurQLSearchIndex(SurQLIndex):
         A pydantic SurQL search index definition
     """
     analyzer: SurQLAnalyzer
-    bm25: tuple(float, float) | None = None
+    bm25: tuple[float, float] | None = None
     highlights: bool = False
 
     def baseSDL(self, table_name: str) -> list[str]:
