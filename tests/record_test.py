@@ -20,6 +20,9 @@ class ParentObject(BaseModel):
     details: ChildObject
     details_opt: Optional[ChildObject]
     details_arr: list[ChildObject]
+    details_recursive: Optional['ParentObject']
+
+ParentObject.model_rebuild()
 
 def check_field(field: SurQLField, truth: SurQLField):
     assert field.name == truth.name
@@ -55,6 +58,10 @@ def test_record():
         SurQLField(name="details", types=[details]),
         SurQLField(name="details_opt", types=[details, SurQLType.OPTIONAL]),
         SurQLField(name="details_arr", types=[[details]]),
+        SurQLField(name="details_recursive", types=[
+            SurQLField(name=None, types=[SurQLType.RECORD], recordLink="parent_table"),
+            SurQLType.OPTIONAL
+        ], recordLink=None),
     ]
     check_fields(fields, truth)
     assert table.SDL() == "\n".join([
@@ -69,4 +76,5 @@ def test_record():
         "DEFINE FIELD details_opt ON TABLE %s TYPE optional<record<child_table>>;" % table.name,
         "DEFINE FIELD details_arr ON TABLE %s TYPE array;" % table.name,
         "DEFINE FIELD details_arr.* ON TABLE %s TYPE record<child_table>;" % table.name,
+        "DEFINE FIELD details_recursive ON TABLE %s TYPE optional<record<%s>>;" % (table.name, table.name)
     ])
