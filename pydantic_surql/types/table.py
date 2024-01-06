@@ -1,4 +1,3 @@
-from typing import Set
 from pydantic import BaseModel, Field, field_validator
 from .field import SurQLField
 from .indexes import SurQLIndex
@@ -90,5 +89,13 @@ class SurQLMapper(BaseModel):
     """
         A simple mapper to store all the SurQL tables definitions generated from pydantic models
     """
-    tables: Set[SurQLTable]
-    __hash__ = object.__hash__
+    tables: list[SurQLTable]
+
+    @field_validator("tables")
+    @classmethod
+    def tables_validator(cls, v):
+        """
+            validate tables
+        """
+        assert len(v) == len(set([table.name for table in v])), "tables names must be unique"
+        return v
