@@ -43,6 +43,9 @@ def check_fields(fields: list[SurQLField], truth: list[SurQLField]):
             check_fields(field.types[0].types, truth[idx].types[0].types)
 
 def test_object():
+    """
+        test the object type SDL generation
+    """
     fields = Parser.from_fields(ParentObject)
     details = SurQLField(name=None, types=[
             SurQLField(name="address", types=[SurQLType.STRING]),

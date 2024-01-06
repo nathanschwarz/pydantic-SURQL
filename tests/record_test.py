@@ -41,7 +41,7 @@ def check_fields(fields: list[SurQLField], truth: list[SurQLField]):
 
 def test_record():
     """
-        Test the record type
+        Test the record type SDL generation
     """
     #mandatory to mark the child table object as a collection internally
     childTable = Parser.from_model("child_table", ChildObject)
