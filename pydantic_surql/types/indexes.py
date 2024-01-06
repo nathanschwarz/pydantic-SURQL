@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import LiteralString
 from pydantic import BaseModel, Field, field_validator
 import re
 
@@ -11,6 +12,27 @@ class SurQLTokenizers(Enum):
     CLASS = "class"
     PUNCT = "punct"
 
+SNOWBALL_LANG: LiteralString = "|".join([
+    "arabic",
+    "danish",
+    "dutch",
+    "english",
+    "french",
+    "german",
+    "greek",
+    "hungarian",
+    "italian",
+    "norwegian",
+    "portuguese",
+    "romanian",
+    "russian",
+    "spanish",
+    "swedish",
+    "tamil",
+    "turkish",
+])
+RE = re.compile(f"^(snowball({SNOWBALL_LANG})|ascii|lowercase|uppercase|edgengram(d+,d+))$")
+
 class SurQLAnalyzer(BaseModel):
     """
         A pydantic SurQL analyzer definition
@@ -18,27 +40,6 @@ class SurQLAnalyzer(BaseModel):
     name: str
     tokenizers: list[SurQLTokenizers] = Field(min_length=1)
     filters: list[str] = []
-    SNOWBALL_LANG = "|".join([
-        "arabic",
-        "danish",
-        "dutch",
-        "english",
-        "french",
-        "german",
-        "greek",
-        "hungarian",
-        "italian",
-        "norwegian",
-        "portuguese",
-        "romanian",
-        "russian",
-        "spanish",
-        "swedish",
-        "tamil",
-        "turkish",
-    ])
-    SNOWBALL_RE = f"snowball\(({SNOWBALL_LANG})\)"
-    RE = f"^({SNOWBALL_RE}|ascii|lowercase|uppercase|edgengram\(\d+,\d+\))$"
 
     @field_validator("filters")
     @classmethod
@@ -48,7 +49,7 @@ class SurQLAnalyzer(BaseModel):
         """
         assert len(v) == len(set(v)), "filters must be unique"
         for t in v:
-            assert re.match(cls.RE, t), "invalid filter, must be one of ascii, lowercase, uppercase, edgengram(<min>,<max>), snowball(<lang>)"
+            assert re.match(RE, t), "invalid filter, must be one of ascii, lowercase, uppercase, edgengram(<min>,<max>), snowball(<lang>)"
         return v
 
     def SDL(self) -> str:
@@ -73,13 +74,15 @@ class SurQLIndex(BaseModel):
     name: str
     fields: list[str]
 
-    def baseSDL(self) -> list[str]:
+    def baseSDL(self, table_name: str) -> list[str]:
         """
             return a SDL index definition list of terms
         """
         return [
             "DEFINE INDEX",
             self.name,
+            "ON TABLE",
+            table_name,
             "FIELDS",
             f"{','.join(self.fields)}",
         ]
@@ -88,17 +91,17 @@ class SurQLIndex(BaseModel):
         """
             return a SDL index definition
         """
-        return " ".join([e for e in self.baseSDL() if e is not None]) + ';'
+        return " ".join([e for e in self.baseSDL(table_name) if e is not None]) + ';'
 
 class SurQLUniqueIndex(SurQLIndex):
     """
         A pydantic SurQL unique index definition
     """
-    def baseSDL(self) -> list[str]:
+    def baseSDL(self, table_name: str) -> list[str]:
         """
             return a SDL unique index definition list of terms
         """
-        return super().baseSDL() + ["UNIQUE"]
+        return super().baseSDL(table_name) + ["UNIQUE"]
 
 class SurQLSearchIndex(SurQLIndex):
     """
@@ -108,11 +111,11 @@ class SurQLSearchIndex(SurQLIndex):
     bm25: bool = False
     highlights: bool = False
 
-    def baseSDL(self) -> list[str]:
+    def baseSDL(self, table_name: str) -> list[str]:
         """
             return a SDL search index definition list of terms
         """
-        return super().baseSDL() + [
+        return super().baseSDL(table_name) + [
             "SEARCH ANALYZER",
             self.analyzer.name,
             "BM25" if self.bm25 else None,

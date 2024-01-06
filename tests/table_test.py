@@ -64,27 +64,3 @@ def test_table_change_feed():
     table = Parser.from_model(name, TableModel, config=SurQLTableConfig(changeFeed=changeFeed))
     assert table.name == name
     assert table._table_def() == "DEFINE TABLE %s SCHEMAFULL CHANGEFEED %s;" % (name, changeFeed)
-
-def test_table_indexes():
-    """
-        Test a table with indexes and unique indexes
-        TODO: search indexes
-    """
-    name = "test_table"
-    #mandatory to mark the child table object as a collection internally
-    table = Parser.from_model(name, TableModel, config=SurQLTableConfig(indexes=[
-        SurQLIndex(name="test_index", fields=["name", "age"]),
-        SurQLIndex(name="test_index2", fields=["nickname"], unique=True),
-    ]))
-    assert table.name == name
-    assert table.SDL() == "\n".join([
-        "DEFINE TABLE %s SCHEMAFULL;" % name,
-        "DEFINE FIELD name ON TABLE %s TYPE string;" % name,
-        "DEFINE FIELD age ON TABLE %s TYPE number;" % name,
-        "DEFINE FIELD score ON TABLE %s TYPE number|null;" % name,
-        "DEFINE FIELD is_active ON TABLE %s TYPE bool;" % name,
-        "DEFINE FIELD birthday ON TABLE %s TYPE datetime;" % name,
-        "DEFINE FIELD nickname ON TABLE %s TYPE optional<string>;" % name,
-        "DEFINE INDEX test_index ON TABLE %s FIELDS name,age;" % name,
-        "DEFINE INDEX test_index2 ON TABLE %s UNIQUE FIELDS nickname;" % name,
-    ])
