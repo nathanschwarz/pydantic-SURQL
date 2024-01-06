@@ -53,3 +53,14 @@ def test_table_drop():
     table = model_to_surql(name, TableModel, config=SurQLTableConfig(drop=True))
     assert table.name == name
     assert table._table_def() == "DEFINE TABLE %s DROP SCHEMAFULL;" % name
+
+def test_table_change_feed():
+    """
+        Test a table with change feed
+    """
+    name = "test_table"
+    changeFeed = "1d"
+    #mandatory to mark the child table object as a collection internally
+    table = model_to_surql(name, TableModel, config=SurQLTableConfig(changeFeed=changeFeed))
+    assert table.name == name
+    assert table._table_def() == "DEFINE TABLE %s SCHEMAFULL CHANGEFEED %s;" % (name, changeFeed)
