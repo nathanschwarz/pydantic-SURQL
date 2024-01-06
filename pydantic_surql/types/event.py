@@ -29,7 +29,7 @@ class SurQLEvent(BaseModel):
         + "OR ".join(self.whenSDL)
         + ["THEN"]
         if (len(self.querySDL) > 1):
-            _def += ["{\n%s\n};" % "\n".join(self.querySDL)]
+            _def += ["{\n%s\n}" % "\n".join(self.querySDL)]
         else:
-            _def += ["(\n%s\n);" % self.querySDL[0]]
+            _def += ["(\n%s\n)" % self.querySDL[0]]
         return " ".join(_def) + ';'

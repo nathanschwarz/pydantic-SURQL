@@ -1,4 +1,6 @@
 from pydantic import BaseModel, Field, field_validator
+
+from .event import SurQLEvent
 from .field import SurQLField
 from .indexes import SurQLAnalyzer, SurQLIndex
 
@@ -39,6 +41,7 @@ class SurQLTableConfig(BaseModel):
     changeFeed: str | None = Field(default=None, description="changefeed definition")
     drop: bool = Field(default=False, description="set table in DROP mode")
     indexes: list[SurQLIndex] = Field(default=[], description="table indexes definitions")
+    events: list[SurQLEvent] = Field(default=[], description="table events definitions")
 
     @field_validator("indexes")
     @classmethod
@@ -83,6 +86,8 @@ class SurQLTable(BaseModel):
                 res.append(field.SDL(self.name))
             for index in self.config.indexes:
                 res.append(index.SDL(self.name))
+            for event in self.config.events:
+                res.append(event.SDL(self.name))
         return "\n".join(res)
 
 class SurQLMetadata(BaseModel):
