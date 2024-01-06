@@ -4,7 +4,7 @@ from .types import SurQLTable, SurQLMapper, SurQLTableConfig
 
 Mapper = SurQLMapper(tables=[])
 
-def model_to_surql(name: str, config: SurQLTableConfig, model: BaseModel) -> SurQLTable:
+def model_to_surql(name: str, model: BaseModel, config: SurQLTableConfig = SurQLTableConfig()) -> SurQLTable:
     """
         Convert a pydantic model to a SurQLTable
         can be used at runtime
@@ -20,7 +20,7 @@ def to_surql(name: str, config: SurQLTableConfig = SurQLTableConfig()):
         A simple decorator to convert a pydantic model to a surQL SDL table definition
     """
     def inner(model: BaseModel):
-        table = model_to_surql(name, config, model)
+        table = model_to_surql(name, model, config)
         Mapper.tables.add(table)
         return model
     return inner

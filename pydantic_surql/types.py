@@ -166,7 +166,7 @@ class SurQLTable(BaseModel):
         A pydantic SurQL table definition
     """
     name: str
-    fields: Set[SurQLField]
+    fields: list[SurQLField]
     config: SurQLTableConfig = SurQLTableConfig()
 
     def _table_def(self):
@@ -190,8 +190,6 @@ class SurQLTable(BaseModel):
             for index in self.config.indexes:
                 res.append(index.SDL(self.name))
         return "\n".join(res)
-
-    __hash__ = object.__hash__
 
 class SurQLMapper(BaseModel):
     """
