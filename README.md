@@ -110,8 +110,21 @@ class SchemaLessCollection(BaseModel):
   #...
 ```
 
+or
+
+```python
+from pydantic_surql import surql_collection
+from pydantic.types import SurQLTableConfig
+from pydantic import BaseModel, ConfigDict
+
+
+@surql_collection("schemaless", SurQLTableConfig(strict=False))
+class SchemaLessCollection(BaseModel):
+  pass
+```
+
 > [!NOTE]
-> you can also define the `strict: false` flag on the `SurQLTableConfig` (the extra value will prime on conflict).
+> the `model_config.extra` value will prime on conflict.
 >
 > if `strict == False` and `model_config.extra != 'allow'` it will be set to `allow` automatically
 
