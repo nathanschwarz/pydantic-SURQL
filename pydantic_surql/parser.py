@@ -116,16 +116,16 @@ class SurQLParser:
         """
         fields = []
         for field_name, field in model.model_fields.items():
-            _field = None
-            _field = self.from_field(field_name, field.annotation)
-            fields.append(_field)
+            if (field_name != 'id' or model.__is_surql_collection__ == False):
+                _field = None
+                _field = self.from_field(field_name, field.annotation)
+                fields.append(_field)
         return fields
 
     def from_model(self, name: str, model: BaseModel, config: SurQLTableConfig = SurQLTableConfig()) -> SurQLTable:
         """
             Convert a pydantic model to a SurQLTable
             can be used at runtime
-            TODO: ignore id field
         """
         model.__is_surql_collection__ = True
         model.__surql_table_name__ = name
