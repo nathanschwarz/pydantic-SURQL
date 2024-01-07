@@ -321,7 +321,11 @@ print(Metadata.collect())
 this will generate the following SDL:
 
 ```surql
-
+DEFINE TABLE object_types SCHEMAFULL;
+DEFINE FIELD id ON TABLE object_types TYPE string;
+DEFINE FIELD sub_object ON TABLE object_types TYPE object;
+DEFINE FIELD sub_object.sub_sub_object ON TABLE object_types FLEXIBLE TYPE object;
+DEFINE FIELD sub_object.sub_sub_object.some_mandatory_field ON TABLE object_types TYPE string;
 ```
 
 > [!WARNING]
