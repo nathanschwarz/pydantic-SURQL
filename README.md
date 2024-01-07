@@ -60,6 +60,7 @@ DEFINE TABLE writers SCHEMAFULL;
 DEFINE FIELD firstname ON TABLE writers TYPE string;
 DEFINE FIELD lastname ON TABLE writers TYPE string;
 DEFINE FIELD birthdate ON TABLE writers TYPE datetime;
+
 DEFINE TABLE books SCHEMAFULL;
 DEFINE FIELD title ON TABLE books TYPE string;
 DEFINE FIELD pages ON TABLE books TYPE optional<number>;
