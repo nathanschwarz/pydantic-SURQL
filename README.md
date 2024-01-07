@@ -113,7 +113,7 @@ class SchemaLessCollection(BaseModel):
 > [!NOTE]
 > you can also define the `strict: false` flag on the `SurQLTableConfig` (the extra value will prime on conflict).
 >
->if `model_config.extra != 'allow'` it will be set to `allow`
+> if `strict == False` and `model_config.extra != 'allow'` it will be set to `allow` automatically
 
 ### drop definitions
 
