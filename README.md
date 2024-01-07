@@ -286,13 +286,11 @@ this will generate the following SDL :
 ```surql
 DEFINE ANALYZER analyzer_name TOKENIZERS blank;
 
-DEFINE TABLE indexed_collection SCHEMAFULL;
-DEFINE FIELD field1 ON TABLE indexed_collection TYPE string;
-DEFINE FIELD field2 ON TABLE indexed_collection TYPE string;
-DEFINE FIELD field3 ON TABLE indexed_collection TYPE string;
-DEFINE INDEX index_name ON TABLE indexed_collection FIELDS field1,field2;
-DEFINE INDEX unique_index_name ON TABLE indexed_collection FIELDS field1,field2 UNIQUE;
-DEFINE INDEX search_index_name ON TABLE indexed_collection FIELDS field3 SEARCH ANALYZER analyzer_name HIGHLIGHTS;
+DEFINE TABLE event_collection SCHEMAFULL;
+DEFINE FIELD field1 ON TABLE event_collection TYPE string;
+DEFINE FIELD field2 ON TABLE event_collection TYPE string;
+DEFINE FIELD field3 ON TABLE event_collection TYPE string;
+DEFINE EVENT event_name ON TABLE event_collection WHEN $event = "INSERT" OR $event = "UPDATE" THEN (INSERT INTO notification_collection (name, collection) VALUES ('something changed', 'event_collection'));
 ```
 
 ## Types definitions
