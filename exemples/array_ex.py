@@ -1,5 +1,5 @@
-from pydantic_surql import surql_collection, Metadata
 from pydantic import BaseModel
+from pydantic_surql import surql_collection, Metadata
 
 @surql_collection("array_types")
 class ArrayTypes(BaseModel):
