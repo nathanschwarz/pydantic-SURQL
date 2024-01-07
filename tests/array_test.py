@@ -103,7 +103,7 @@ class TestSimpleArrayFields:
             test array<dict> type parsing and SDL generation
         """
         field = Parser.from_field(F_NAME, list[dict])
-        self.simple_field_check(field, [[SurQLType.DICT]])
+        self.simple_field_check(field, [[SurQLType.FLEXIBLE]])
         assert field.SDL(T_NAME) == "\n".join([
             "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "array"),
             "DEFINE FIELD %s.* ON TABLE %s FLEXIBLE TYPE %s;" % (F_NAME, T_NAME, "object"),
@@ -114,7 +114,7 @@ class TestSimpleArrayFields:
             test array<str | int | float | bool | datetime | dict> type parsing and SDL generation
         """
         field = Parser.from_field(F_NAME, list[str | int | float | bool | datetime | dict])
-        common_types = [[SurQLType.STRING, SurQLType.NUMBER, SurQLType.NUMBER, SurQLType.BOOLEAN, SurQLType.DATE, SurQLType.DICT]]
+        common_types = [[SurQLType.STRING, SurQLType.NUMBER, SurQLType.NUMBER, SurQLType.BOOLEAN, SurQLType.DATE, SurQLType.FLEXIBLE]]
         SDL_types = [SurQLType.STRING.value, SurQLType.NUMBER.value, SurQLType.NUMBER.value, SurQLType.BOOLEAN.value, SurQLType.DATE.value, SurQLType.OBJECT.value]
         self.simple_field_check(field, common_types)
         assert field.SDL(T_NAME) == "\n".join([

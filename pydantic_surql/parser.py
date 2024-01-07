@@ -36,7 +36,7 @@ class SurQLParser:
         if (_type == Any):
             return SurQLType.ANY
         if (_type == dict):
-            return SurQLType.DICT
+            return SurQLType.FLEXIBLE
         if (_type == SurQLNullable):
             return SurQLType.NULL
         if (_type == NoneType):

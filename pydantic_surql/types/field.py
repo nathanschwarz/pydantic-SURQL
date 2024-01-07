@@ -24,7 +24,7 @@ class SurQLType(Enum):
     ANY = "any"
     BOOLEAN = "bool"
     ARRAY = "array"
-    DICT = "FLEXIBLE TYPE object"
+    FLEXIBLE = "FLEXIBLE"
     OBJECT = "object"
     RECORD = "record<%s>"
     ANY_RECORD = "record()"
@@ -77,7 +77,7 @@ class SurQLField(BaseModel):
         for _type in types:
             if (_type in BASIC_TYPES):
                 res += [_type.value]
-            elif (_type is SurQLType.DICT):
+            elif (_type is SurQLType.FLEXIBLE):
                 isFlexible = True
                 res += [SurQLType.OBJECT.value]
             elif (isinstance(_type, list)):
