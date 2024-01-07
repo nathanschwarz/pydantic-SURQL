@@ -28,7 +28,8 @@ and the [following types](#types-definitions) out of the box :
 
 ❌ what it doesn't support yet :
 
-- SURQL queries definitions (select, update, delete, where, ...). It may be implemented in a complementary package
+- SURQL queries definitions (select, update, delete, where, ...)
+- SURQL functions definitions
 
 PRs are welcome 😉
 
