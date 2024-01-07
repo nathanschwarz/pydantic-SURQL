@@ -101,26 +101,29 @@ By default collections are schemafull because pydantic doesn't allow models to h
 to make a collection schemaless you can use [pydantic built in feature](https://docs.pydantic.dev/latest/api/config/#pydantic.config.ConfigDict.extra).
 
 ```python
-from pydantic_surql import surql_collection
+from pydantic_surql import surql_collection, Metadata
 from pydantic import BaseModel, ConfigDict
 
 @surql_collection("schemaless")
 class SchemaLessCollection(BaseModel):
   model_config = ConfigDict(extra='allow')
   #...
+
+print(Metadata.collect())
 ```
 
 or
 
 ```python
-from pydantic_surql import surql_collection
-from pydantic.types import SurQLTableConfig
+from pydantic_surql import surql_collection, Metadata
+from pydantic_surql.types import SurQLTableConfig
 from pydantic import BaseModel, ConfigDict
-
 
 @surql_collection("schemaless", SurQLTableConfig(strict=False))
 class SchemaLessCollection(BaseModel):
   pass
+
+print(Metadata.collect())
 ```
 
 > [!NOTE]
@@ -128,11 +131,79 @@ class SchemaLessCollection(BaseModel):
 >
 > if `strict == False` and `model_config.extra != 'allow'` it will be set to `allow` automatically
 
+this will generate the following SDL :
+
+```surql
+DEFINE TABLE schemaless SCHEMALESS;
+```
+
 ### drop definitions
+
+you can define the collection as dropped through the config :
+
+```python
+from pydantic_surql import surql_collection, Metadata
+from pydantic_surql.types import SurQLTableConfig
+from pydantic import BaseModel
+
+@surql_collection("drop_collection", SurQLTableConfig(drop=True))
+class DropCollection(BaseModel):
+  pass
+
+print(Metadata.collect())
+```
+
+this will generate the following SDL :
+
+```surql
+DEFINE TABLE drop_collection DROP SCHEMAFULL;
+```
 
 ### changefeed definitions
 
+you can define the changefeed on collection through the config :
+
+```python
+from pydantic_surql import surql_collection, Metadata
+from pydantic_surql.types import SurQLTableConfig
+from pydantic import BaseModel
+
+@surql_collection("changefeed_collection", SurQLTableConfig(changeFeed="1d"))
+class ChangefeedCollection(BaseModel):
+  pass
+
+print(Metadata.collect())
+```
+
+this will generate the following SDL :
+
+```surql
+DEFINE TABLE changefeed_collection SCHEMAFULL CHANGEFEED 1d;
+```
+
 ### view definitions
+
+you can define a collection as a view through the config :
+
+```python
+from pydantic_surql import surql_collection, Metadata
+from pydantic.types import SurQLTableConfig, SurQLView
+from pydantic import BaseModel
+
+config = SurQLTableConfig(asView=SurQLView(select=["name", "age"], from_t=["users"], where=["age > 18"], group_by=["age"]))
+@surql_collection("view_collection", config)
+class ViewCollection(BaseModel):
+  name: list[str]
+  age: str
+
+print(Metadata.collect())
+```
+
+this will generate the following SDL :
+
+```surql
+DEFINE TABLE view_collection AS SELECT name,age FROM users WHERE age > 18 GROUP BY age;
+```
 
 ### indexes definitions
 

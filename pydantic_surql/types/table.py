@@ -106,6 +106,13 @@ class SurQLMetadata(BaseModel):
         assert len(v) == len(set([table.name for table in v])), "tables names must be unique"
         return v
 
+    def clear(self):
+        """
+            clear all the tables definitions
+        """
+        self.tables = []
+        self.analyzers = []
+
     def collect(self):
         """
             return a SDL string with all the tables definitions
