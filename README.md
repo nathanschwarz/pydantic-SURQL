@@ -23,6 +23,7 @@ and the [following types](#types-definitions) out of the box :
 - [union](#union-types)
 - [optional and null](#optional-and-null-types)
 - [array](#array-types)
+- [set](#set-types)
 - [object](#object-types)
 - [record](#record-types)
 
@@ -456,6 +457,41 @@ DEFINE FIELD list_list_str_list ON TABLE array_types TYPE array;
 DEFINE FIELD list_list_str_list.* ON TABLE array_types TYPE array;
 DEFINE FIELD list_list_str_list.*.* ON TABLE array_types TYPE array;
 DEFINE FIELD list_list_str_list.*.*.* ON TABLE array_types TYPE string;
+```
+
+### set types
+
+to define set types you can use the `set[T]` notation. \
+You can nest sets as much as you want :
+
+```python
+from pydantic_surql import surql_collection, Metadata
+from pydantic import BaseModel
+
+@surql_collection("set_types")
+class SetTypes(BaseModel):
+    id: str
+    str_set: set[str | int]
+    set_str_set: set[set[str]]
+    set_set_str_set: set[set[set[str]]]
+    #...
+
+print(Metadata.collect())
+```
+
+this will generate the following SDL:
+
+```surql
+DEFINE TABLE set_types SCHEMAFULL;
+DEFINE FIELD str_set ON TABLE set_types TYPE set;
+DEFINE FIELD str_set.* ON TABLE set_types TYPE string|number;
+DEFINE FIELD set_str_set ON TABLE set_types TYPE set;
+DEFINE FIELD set_str_set.* ON TABLE set_types TYPE set;
+DEFINE FIELD set_str_set.*.* ON TABLE set_types TYPE string;
+DEFINE FIELD set_set_str_set ON TABLE set_types TYPE set;
+DEFINE FIELD set_set_str_set.* ON TABLE set_types TYPE set;
+DEFINE FIELD set_set_str_set.*.* ON TABLE set_types TYPE set;
+DEFINE FIELD set_set_str_set.*.*.* ON TABLE set_types TYPE string;
 ```
 
 ### object types
