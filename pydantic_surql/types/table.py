@@ -115,4 +115,4 @@ class SurQLMetadata(BaseModel):
             res.append(analyzer.SDL())
         for table in self.tables:
             res.append(table.SDL())
-        return "\n".join(res)
+        return "\n\n".join(res)
