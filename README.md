@@ -110,7 +110,9 @@ class SchemaLessCollection(BaseModel):
   #...
 ```
 
-!!!info you can also define the `strict: false` flag on the `SurQLTableConfig` (the extra value will prime on conflict).<br>if `model_config.extra == None` it will be set to `allow`
+> [!NOTE]
+> you can also define the `strict: false` flag on the `SurQLTableConfig` (the extra value will prime on conflict).
+>if `model_config.extra == None` it will be set to `allow`
 
 ### drop definitions
 
@@ -249,7 +251,8 @@ DEFINE FIELD id ON TABLE nullable_types TYPE string;
 DEFINE FIELD nullable_str ON TABLE nullable_types TYPE string|null;
 ```
 
-!!!danger using `None` will result in an `optional` field (`Optional[T] <=> T | None`)
+> [!CAUTION]
+> using `None` will result in an `optional` field (`Optional[T] <=> T | None`)
 
 ### array types
 
@@ -321,7 +324,8 @@ this will generate the following SDL:
 
 ```
 
-!!!warning surql doesn't support recursive objects, if you want to use recursive structures use a [`record` definition](#record-types)
+> [!WARNING]
+> surql doesn't support recursive objects, if you want to use recursive structures use a [`record` definition](#record-types)
 
 ### record types
 
