@@ -93,9 +93,6 @@ DEFINE FIELD weight ON TABLE books TYPE number;
 DEFINE FIELD writer ON TABLE books TYPE record<writers>;
 ```
 
-> [!NOTE]
-> only the used tokenizers (used in a configuration) will be collected
-
 ## Collections definitions
 
 ### schemafull / schemaless definitions
@@ -256,6 +253,9 @@ DEFINE INDEX index_name ON TABLE indexed_collection FIELDS field1,field2;
 DEFINE INDEX unique_index_name ON TABLE indexed_collection FIELDS field1,field2 UNIQUE;
 DEFINE INDEX search_index_name ON TABLE indexed_collection FIELDS field3 SEARCH ANALYZER analyzer_name HIGHLIGHTS;
 ```
+
+> [!NOTE]
+> only the used tokenizers (used in a configuration) will be collected
 
 ## events definitions
 
