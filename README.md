@@ -137,10 +137,10 @@ class SchemaLessCollection(baseModel):
 to define a basic type you can use the following python types :
 
 ```python
-from pydantic_surql import surql_collection
+from pydantic_surql import surql_collection, Metadata
 from pydantic import BaseModel
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 @surql_collection("basic_types")
 class BasicTypes(BaseModel):
@@ -151,6 +151,8 @@ class BasicTypes(BaseModel):
     date: datetime
     flag: bool
     any_v: Any
+
+print(Metadata.collect())
 ```
 
 ### union types
@@ -158,17 +160,19 @@ class BasicTypes(BaseModel):
 to define union types you can use the `Union[T, Y]` or the `|` notation :
 
 ```python
-from pydantic_surql import surql_collection
+from pydantic_surql import surql_collection, Metadata
 from pydantic import BaseModel
 from typing import Union
 from datetime import datetime
 
 @surql_collection("union_types")
-class BasicTypes(BaseModel):
+class UnionTypes(BaseModel):
     id: str
     str_number: Union[str, int]
     date_timestamp: int | datetime
     #...
+
+print(Metadata.collect())
 ```
 
 ### optional and null types
@@ -176,30 +180,33 @@ class BasicTypes(BaseModel):
 to define an optional type you can use the `Optional` notation :
 
 ```python
-from pydantic_surql import surql_collection
+from pydantic_surql import surql_collection, Metadata
 from pydantic import BaseModel
 from typing import Optional
 
-@surql_collection("array_types")
-class BasicTypes(BaseModel):
+@surql_collection("optional_types")
+class OptionalTypes(BaseModel):
     id: str
     opt_str: Optional[str]
     #...
+
+print(Metadata.collect())
 ```
 
 to define a null value you can use the `SurQLNullable` type :
 
 ```python
-from pydantic_surql import surql_collection
+from pydantic_surql import surql_collection, Metadata
 from pydantic_surql.types import SurQLNullable
 from pydantic import BaseModel
-from typing import Optional
 
-@surql_collection("array_types")
+@surql_collection("nullable_types")
 class BasicTypes(BaseModel):
     id: str
     nullable_str: str | SurQLNullable
     #...
+
+print(Metadata.collect())
 ```
 
 !!!danger using `None` will result in an `optional` field (`Optional[T] <=> T | None`)
@@ -210,16 +217,18 @@ to define array types you can use the `list[T]` notation. \
 You can nest arrays as much as you want :
 
 ```python
-from pydantic_surql import surql_collection
+from pydantic_surql import surql_collection, Metadata
 from pydantic import BaseModel
 
 @surql_collection("array_types")
-class BasicTypes(BaseModel):
+class ArrayTypes(BaseModel):
     id: str
     str_list: list[str | int]
     list_str_list: list[list[str]]
     list_list_str_list: list[list[list[str]]]
     #...
+
+print(Metadata.collect())
 ```
 
 ### object types
@@ -229,15 +238,15 @@ to mark the object as `flexible`, you can use [pydantic built in feature](https:
 You can also nest objects as much as you want :
 
 ```python
-from pydantic_surql import surql_collection
+from pydantic_surql import surql_collection, Metadata
 from pydantic import BaseModel, ConfigDict
 
-class SubSubObject(baseModel):
+class SubSubObject(BaseModel):
   model_config = ConfigDict(extra='allow')
   some_mandatory_field: str
   #...
 
-class SubObject(baseModel):
+class SubObject(BaseModel):
   sub_sub_object: SubSubObject
   #...
 
@@ -246,6 +255,8 @@ class ObjectTypes(BaseModel):
     id: str
     sub_object: SubObject
     #...
+
+print(Metadata.collect())
 ```
 
 !!!warning surql doesn't support recursive objects, if you want to use recursive structures use a [`record` definition](#record-types)
@@ -256,11 +267,11 @@ Internally the `@surql_collection` decorator will mark the model as a surql coll
 Defining a record is simple as :
 
 ```python
-from pydantic_surql import surql_collection
+from pydantic_surql import surql_collection, Metadata
 from pydantic import BaseModel
 
 @surql_collection("record_target")
-class RecordTarget(baseModel):
+class RecordTarget(BaseModel):
   id: str
   some_field: str
   #...
@@ -270,4 +281,6 @@ class RecordTypes(BaseModel):
   id: str
   record_target: RecordTarget
   #...
+
+print(Metadata.collect())
 ```
