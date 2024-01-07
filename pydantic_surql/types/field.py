@@ -24,7 +24,6 @@ class SurQLType(Enum):
     ANY = "any"
     BOOLEAN = "bool"
     ARRAY = "array"
-    FLEXIBLE = "FLEXIBLE"
     OBJECT = "object"
     RECORD = "record<%s>"
     ANY_RECORD = "record()"
@@ -56,6 +55,7 @@ class SurQLField(BaseModel):
     name: Optional[str]
     types: RecursiveType
     recordLink: Optional[str] = None
+    isFlexible: bool = False
 
     @classmethod
     def _f_string(cls, field: str, table: str, types: str, isFlexible: bool):
@@ -77,9 +77,6 @@ class SurQLField(BaseModel):
         for _type in types:
             if (_type in BASIC_TYPES):
                 res += [_type.value]
-            elif (_type is SurQLType.FLEXIBLE):
-                isFlexible = True
-                res += [SurQLType.OBJECT.value]
             elif (isinstance(_type, list)):
                 res += [SurQLType.ARRAY.value]
                 nextFields += cls._surqlFromTypes(table_name, f"{field_name}.*", _type)
@@ -88,6 +85,7 @@ class SurQLField(BaseModel):
                     res += [SurQLType.RECORD.value % _type.recordLink]
                 else:
                     res += [SurQLType.OBJECT.value]
+                    isFlexible = _type.isFlexible
                     for _field in _type.types:
                         nextFields += cls._surqlFromTypes(table_name, f"{field_name}.{_field.name}", _field.types)
             elif (_type is SurQLType.OPTIONAL):

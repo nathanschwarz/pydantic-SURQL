@@ -3,7 +3,6 @@ from typing import Any, Optional
 from pydantic_surql.parser import SurQLParser
 from pydantic_surql.types import SurQLNullable, SurQLAnyRecord, SurQLType, SurQLField
 
-
 Parser = SurQLParser()
 F_NAME = "test"
 T_NAME = "test_table"
@@ -91,24 +90,14 @@ class TestSimpleFields:
         """
         self.common_check(SurQLAnyRecord, SurQLType.ANY_RECORD)
 
-    def test_dict(self):
-        """
-            test dict type parsing
-        """
-        field = Parser.from_field(F_NAME, dict)
-        self.simple_field_check(field, [SurQLType.FLEXIBLE])
-        assert field.SDL(T_NAME) == "\n".join([
-            "DEFINE FIELD %s ON TABLE %s FLEXIBLE TYPE %s;" % (F_NAME, T_NAME, "object"),
-        ])
-
     def test_multi(self):
         """
             test multi type parsing
         """
-        field = Parser.from_field(F_NAME, str | int | float | bool | datetime | dict)
-        common_types = [SurQLType.STRING, SurQLType.NUMBER, SurQLType.NUMBER, SurQLType.BOOLEAN, SurQLType.DATE, SurQLType.FLEXIBLE]
-        SDL_types = [SurQLType.STRING.value, SurQLType.NUMBER.value, SurQLType.NUMBER.value, SurQLType.BOOLEAN.value, SurQLType.DATE.value, SurQLType.OBJECT.value]
+        field = Parser.from_field(F_NAME, str | int | float | bool | datetime)
+        common_types = [SurQLType.STRING, SurQLType.NUMBER, SurQLType.NUMBER, SurQLType.BOOLEAN, SurQLType.DATE]
+        SDL_types = [SurQLType.STRING.value, SurQLType.NUMBER.value, SurQLType.NUMBER.value, SurQLType.BOOLEAN.value, SurQLType.DATE.value]
         self.simple_field_check(field, common_types)
         assert field.SDL(T_NAME) == "\n".join([
-            "DEFINE FIELD %s ON TABLE %s FLEXIBLE TYPE %s;" % (F_NAME, T_NAME, "|".join(SDL_types)),
+            "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "|".join(SDL_types)),
         ])

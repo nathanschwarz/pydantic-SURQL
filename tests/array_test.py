@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import Any, Optional, Type
+
 from pydantic_surql.parser import SurQLParser
 from pydantic_surql.types import SurQLField, SurQLNullable, SurQLAnyRecord, SurQLType
-
 
 Parser = SurQLParser()
 F_NAME = "test"
@@ -98,28 +98,17 @@ class TestSimpleArrayFields:
             "DEFINE FIELD %s.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "string|null"),
         ])
 
-    def test_dict(self):
-        """
-            test array<dict> type parsing and SDL generation
-        """
-        field = Parser.from_field(F_NAME, list[dict])
-        self.simple_field_check(field, [[SurQLType.FLEXIBLE]])
-        assert field.SDL(T_NAME) == "\n".join([
-            "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "array"),
-            "DEFINE FIELD %s.* ON TABLE %s FLEXIBLE TYPE %s;" % (F_NAME, T_NAME, "object"),
-        ])
-
     def test_multi(self):
         """
-            test array<str | int | float | bool | datetime | dict> type parsing and SDL generation
+            test array<str | int | float | bool | datetime> type parsing and SDL generation
         """
-        field = Parser.from_field(F_NAME, list[str | int | float | bool | datetime | dict])
-        common_types = [[SurQLType.STRING, SurQLType.NUMBER, SurQLType.NUMBER, SurQLType.BOOLEAN, SurQLType.DATE, SurQLType.FLEXIBLE]]
-        SDL_types = [SurQLType.STRING.value, SurQLType.NUMBER.value, SurQLType.NUMBER.value, SurQLType.BOOLEAN.value, SurQLType.DATE.value, SurQLType.OBJECT.value]
+        field = Parser.from_field(F_NAME, list[str | int | float | bool | datetime])
+        common_types = [[SurQLType.STRING, SurQLType.NUMBER, SurQLType.NUMBER, SurQLType.BOOLEAN, SurQLType.DATE]]
+        SDL_types = [SurQLType.STRING.value, SurQLType.NUMBER.value, SurQLType.NUMBER.value, SurQLType.BOOLEAN.value, SurQLType.DATE.value]
         self.simple_field_check(field, common_types)
         assert field.SDL(T_NAME) == "\n".join([
             "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "array"),
-            "DEFINE FIELD %s.* ON TABLE %s FLEXIBLE TYPE %s;" % (F_NAME, T_NAME, "|".join(SDL_types)),
+            "DEFINE FIELD %s.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "|".join(SDL_types)),
         ])
 
     def test_nested(self):
@@ -133,8 +122,6 @@ class TestSimpleArrayFields:
             "DEFINE FIELD %s.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "array"),
             "DEFINE FIELD %s.*.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "string"),
         ])
-
-
 
     def test_nested_nested(self):
         """

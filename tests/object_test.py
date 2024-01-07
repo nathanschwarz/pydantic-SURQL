@@ -1,12 +1,13 @@
 from datetime import datetime
 from typing import Any, Optional
 from pydantic_surql.parser import SurQLParser
-from pydantic_surql.types import SurQLNullable, SurQLType, SurQLField
-from pydantic import BaseModel
+from pydantic_surql.types import SurQLNullable, SurQLType, SurQLField, RecursiveType
+from pydantic import BaseModel, ConfigDict
 
 Parser = SurQLParser()
 
 class ChildChildObject(BaseModel):
+    model_config = ConfigDict(extra="allow")
     country: str
     city: str
 
@@ -26,21 +27,22 @@ class ParentObject(BaseModel):
     details_opt: Optional[ChildObject]
     details_arr: list[ChildObject]
 
-def check_field(field: SurQLField, truth: SurQLField):
-    assert field.name == truth.name
-    assert field.recordLink == truth.recordLink
-    assert len(field.types) == len(truth.types)
-    assert set(field.types) == set(truth.types)
-
-def check_fields(fields: list[SurQLField], truth: list[SurQLField]):
-    assert len(fields) == len(truth)
+def check_fields(fields: RecursiveType, truth: RecursiveType):
+    assert len(fields) == len(truth), "fields and truth must have the same length"
     for (idx, field) in enumerate(fields):
-        if (not field.name.startswith("details")):
-            check_field(field, truth[idx])
-        elif (field.name.endswith('arr')):
-            check_fields(field.types[0][0].types, truth[idx].types[0][0].types)
+        if (isinstance(field, list)):
+            check_fields(field, truth[idx])
+        elif (isinstance(field, SurQLField)):
+            assert field.name == truth[idx].name, "field name must be the same"
+            assert field.recordLink == truth[idx].recordLink, "field recordLink must be the same"
+            assert len(field.types) == len(truth[idx].types), "field %s types must have the same length %s\n%s" % (
+                field.name,
+                field.model_dump_json(indent=2),
+                truth[idx].model_dump_json(indent=2)
+            )
+            check_fields(field.types, truth[idx].types)
         else:
-            check_fields(field.types[0].types, truth[idx].types[0].types)
+            assert field == truth[idx], f"field type is incorrect, got {field} vs {truth[idx]}"
 
 def test_object():
     """
@@ -73,7 +75,7 @@ def test_object():
     detailsSDL = [
         "DEFINE FIELD %s.address ON TABLE %s TYPE string;",
         "DEFINE FIELD %s.phone ON TABLE %s TYPE string;",
-        "DEFINE FIELD %s.details ON TABLE %s TYPE object;",
+        "DEFINE FIELD %s.details ON TABLE %s FLEXIBLE TYPE object;",
         "DEFINE FIELD %s.details.country ON TABLE %s TYPE string;",
         "DEFINE FIELD %s.details.city ON TABLE %s TYPE string;",
     ]

@@ -35,8 +35,6 @@ class SurQLParser:
             return SurQLType.BOOLEAN
         if (_type == Any):
             return SurQLType.ANY
-        if (_type == dict):
-            return SurQLType.FLEXIBLE
         if (_type == SurQLNullable):
             return SurQLType.NULL
         if (_type == NoneType):
@@ -72,12 +70,16 @@ class SurQLParser:
                     res.append(self.from_type(arg))
             return self.cache.set(_type, res)
 
-        # is a pydantic model decorated with @surql_collection
-        if hasattr(_type, '__is_surql_collection__'):
-            return SurQLField(name=None, types=[SurQLType.RECORD], recordLink=_type.__surql_table_name__)
-
         # is a pydantic model
-        return SurQLField(name=None, types=self.from_fields(_type), recordLink=None)
+        if (issubclass(_type, BaseModel)):
+            if hasattr(_type, '__is_surql_collection__'):
+                # was decorated with @surql_collection
+                return SurQLField(name=None, types=[SurQLType.RECORD], recordLink=_type.__surql_table_name__)
+            extra = _type.model_config.get('extra')
+            if extra == 'allow':
+                return SurQLField(name=None, types=self.from_fields(_type), recordLink=None, isFlexible=True)
+            return SurQLField(name=None, types=self.from_fields(_type), recordLink=None)
+        raise Exception(f"Type {_type} is not supported")
 
     def from_union(self, type: UnionType) -> RecursiveType:
         """
@@ -129,4 +131,7 @@ class SurQLParser:
         """
         model.__is_surql_collection__ = True
         model.__surql_table_name__ = name
+        extra = model.model_config.get('extra')
+        if extra == 'allow':
+            config.strict = False
         return SurQLTable(name=name, fields=self.from_fields(model), config=config)
