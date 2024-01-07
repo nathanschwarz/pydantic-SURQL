@@ -10,7 +10,7 @@ from typing_extensions import TypeAliasType
 SurQLNullable =  Type[None]
 
 """
-    A custom type to define a flexible record
+    A custom type to define a generic record
 """
 SurQLAnyRecord = Type[dict]
 

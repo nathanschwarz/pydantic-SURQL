@@ -358,3 +358,30 @@ DEFINE FIELD some_field ON TABLE record_target TYPE string;
 DEFINE TABLE record_types SCHEMAFULL;
 DEFINE FIELD record_target ON TABLE record_types TYPE record<record_target>;
 ```
+
+It's also possible to use a generic record :
+
+```python
+from pydantic_surql import surql_collection, Metadata
+from pydantic_surql.types import SurQLAnyRecord
+from pydantic import BaseModel
+
+@surql_collection("generic_record_types")
+class GenericRecordTypes(BaseModel):
+  id: str
+  record_target: SurQLAnyRecord
+  #...
+
+print(Metadata.collect())
+```
+
+this will generate the following SDL:
+
+```surql
+DEFINE TABLE generic_record_types SCHEMAFULL;
+DEFINE FIELD id ON TABLE generic_record_types TYPE string;
+DEFINE FIELD record_target ON TABLE generic_record_types TYPE record();
+```
+
+> [!NOTE]
+> `SurQLAnyRecord <=> Type[dict]` so your pydantic model wont be able to map to pydantic classes automatically.
