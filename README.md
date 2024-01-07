@@ -163,7 +163,6 @@ this will generate the following SDL:
 
 ```surql
 DEFINE TABLE basic_types SCHEMAFULL;
-DEFINE FIELD id ON TABLE basic_types TYPE string;
 DEFINE FIELD string ON TABLE basic_types TYPE string;
 DEFINE FIELD number ON TABLE basic_types TYPE number;
 DEFINE FIELD number_two ON TABLE basic_types TYPE number;
@@ -196,7 +195,6 @@ this will generate the following SDL:
 
 ```surql
 DEFINE TABLE union_types SCHEMAFULL;
-DEFINE FIELD id ON TABLE union_types TYPE string;
 DEFINE FIELD str_number ON TABLE union_types TYPE string|number;
 DEFINE FIELD date_timestamp ON TABLE union_types TYPE number|datetime;
 ```
@@ -223,7 +221,6 @@ this will generate the following SDL:
 
 ```surql
 DEFINE TABLE optional_types SCHEMAFULL;
-DEFINE FIELD id ON TABLE optional_types TYPE string;
 DEFINE FIELD opt_str ON TABLE optional_types TYPE optional<string>;
 ```
 
@@ -247,7 +244,6 @@ this will generate the following SDL:
 
 ```surql
 DEFINE TABLE nullable_types SCHEMAFULL;
-DEFINE FIELD id ON TABLE nullable_types TYPE string;
 DEFINE FIELD nullable_str ON TABLE nullable_types TYPE string|null;
 ```
 
@@ -278,7 +274,6 @@ this will generate the following SDL:
 
 ```surql
 DEFINE TABLE array_types SCHEMAFULL;
-DEFINE FIELD id ON TABLE array_types TYPE string;
 DEFINE FIELD str_list ON TABLE array_types TYPE array;
 DEFINE FIELD str_list.* ON TABLE array_types TYPE string|number;
 DEFINE FIELD list_str_list ON TABLE array_types TYPE array;
@@ -322,7 +317,6 @@ this will generate the following SDL:
 
 ```surql
 DEFINE TABLE object_types SCHEMAFULL;
-DEFINE FIELD id ON TABLE object_types TYPE string;
 DEFINE FIELD sub_object ON TABLE object_types TYPE object;
 DEFINE FIELD sub_object.sub_sub_object ON TABLE object_types FLEXIBLE TYPE object;
 DEFINE FIELD sub_object.sub_sub_object.some_mandatory_field ON TABLE object_types TYPE string;
@@ -359,10 +353,8 @@ this will generate the following SDL:
 
 ```surql
 DEFINE TABLE record_target SCHEMAFULL;
-DEFINE FIELD id ON TABLE record_target TYPE string;
 DEFINE FIELD some_field ON TABLE record_target TYPE string;
 
 DEFINE TABLE record_types SCHEMAFULL;
-DEFINE FIELD id ON TABLE record_types TYPE string;
 DEFINE FIELD record_target ON TABLE record_types TYPE record<record_target>;
 ```
