@@ -70,6 +70,20 @@ class SurQLParser:
                     res.append(self.from_type(arg))
             return self.cache.set(_type, res)
 
+        # is a set
+        if (isinstance(_type, GenericAlias) and _type.__origin__ == set):
+            args = get_args(_type)
+            res = []
+            for arg in args:
+                simpleType = self.to_simple_type(arg)
+                if (simpleType is not None):
+                    res.append(simpleType)
+                elif (is_union(arg)):
+                    res += self.from_union(arg)
+                else:
+                    res.append(self.from_type(arg))
+            return self.cache.set(_type, [SurQLType.SET, res])
+
         # is a pydantic model
         if (issubclass(_type, BaseModel)):
             if hasattr(_type, '__is_surql_collection__'):

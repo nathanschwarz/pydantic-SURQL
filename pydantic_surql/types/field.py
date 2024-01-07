@@ -1,4 +1,4 @@
-from typing import List, Type, Union
+from typing import List, Type, Union, Sequence
 from enum import Enum
 from typing import Optional
 from pydantic import BaseModel
@@ -25,6 +25,7 @@ class SurQLType(Enum):
     BOOLEAN = "bool"
     ARRAY = "array"
     OBJECT = "object"
+    SET = "set"
     RECORD = "record<%s>"
     ANY_RECORD = "record()"
     OPTIONAL = "optional<%s>"
@@ -45,7 +46,7 @@ COMPLEX_TYPES = [
     SurQLType.RECORD,
 ]
 
-RecursiveType = TypeAliasType('RecursiveType', List[Union[SurQLType, 'SurQLField', 'RecursiveType']])
+RecursiveType = TypeAliasType('RecursiveType', Sequence[Union[SurQLType, 'SurQLField', 'RecursiveType']])
 
 class SurQLField(BaseModel):
     """
@@ -78,9 +79,13 @@ class SurQLField(BaseModel):
         for _type in types:
             if (_type in BASIC_TYPES):
                 res += [_type.value]
-            elif (isinstance(_type, list)):
-                res += [SurQLType.ARRAY.value]
-                nextFields += cls._surqlFromTypes(table_name, f"{field_name}.*", _type)
+            elif isinstance(_type, list):
+                if (_type[0] == SurQLType.SET):
+                    res += [SurQLType.SET.value]
+                    nextFields += cls._surqlFromTypes(table_name, f"{field_name}.*", _type[1])
+                else:
+                    res += [SurQLType.ARRAY.value]
+                    nextFields += cls._surqlFromTypes(table_name, f"{field_name}.*", _type)
             elif (isinstance(_type, cls)):
                 if (_type.types == [SurQLType.RECORD]):
                     res += [SurQLType.RECORD.value % _type.recordLink]

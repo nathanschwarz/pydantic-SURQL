@@ -30,6 +30,9 @@ and the [following types](#types-definitions) out of the box :
 
 - SURQL queries definitions (select, update, delete, where, ...)
 - SURQL functions definitions
+- SURQL scopes definitions
+- Future types
+- Geometry types
 
 PRs are welcome 😉
 
