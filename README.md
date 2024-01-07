@@ -6,16 +6,16 @@ it supports the following features
 
 - [collection definitions (a.k.a tables)](#collections-definitions)
   - [schemafull / schemaless](#schemafull--schemaless-definitions)
-  - drop
-  - changefeed
-  - view
-  - indexes definitions
-    - regular indexes
-    - unique indexes
-    - search indexes
-- analyzers definition
-- tokenizers definition
-- events definition
+  - [drop](#drop-definitions)
+  - [changefeed](#changefeed-definitions)
+  - [view](#view-definitions)
+  - [indexes definitions](#indexes-definitions)
+    - [regular indexes](#regular-indexes-definitions)
+    - [unique indexes](#unique-indexes-definitions)
+    - [search indexes](#search-indexes-definitions)
+- [analyzers definition](#anaylizers-definitions)
+- [tokenizers definition](#tokenizers-definitions)
+- [events definition](#events-definitions)
 
 and the [following types](#types-definitions) out of the box :
 
@@ -97,7 +97,38 @@ DEFINE FIELD writer ON TABLE books TYPE record<writers>;
 
 ### schemafull / schemaless definitions
 
-By default pydantic doesn't allow models to have extra values, to mark the collection as schemaless
+By default collections are schemafull because pydantic doesn't allow models to have extra values.\
+to make a collection schemaless you can use [pydantic built in feature](https://docs.pydantic.dev/latest/api/config/#pydantic.config.ConfigDict.extra).
+
+```python
+from pydantic_surql import surql_collection
+from pydantic import BaseModel, ConfigDict
+
+@surql_collection("schemaless")
+class SchemaLessCollection(baseModel):
+  model_config = ConfigDict(extra='allow')
+  #...
+```
+
+### drop definitions
+
+### changefeed definitions
+
+### view definitions
+
+### indexes definitions
+
+#### regular indexes definitions
+
+#### unique indexes definitions
+
+#### search indexes definitions
+
+## anaylizers definitions
+
+## tokenizers definitions
+
+## events definitions
 
 ## Types definitions
 
@@ -194,7 +225,7 @@ class BasicTypes(BaseModel):
 ### object types
 
 to define an object you can use a Pydantic model. \
-to mark the object as `flexible`, you can use [pydantic built in feature.](https://docs.pydantic.dev/latest/api/config/#pydantic.config.ConfigDict.extra) \
+to mark the object as `flexible`, you can use [pydantic built in feature](https://docs.pydantic.dev/latest/api/config/#pydantic.config.ConfigDict.extra) \
 You can also nest objects as much as you want :
 
 ```python
