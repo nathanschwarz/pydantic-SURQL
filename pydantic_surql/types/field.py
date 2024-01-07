@@ -69,6 +69,7 @@ class SurQLField(BaseModel):
         """
             return SDLS fields definitions recursively
             TODO: remove duplicates (eg: when a field is defined as int | float)
+            TODO: check name is not a reserved keyword
         """
         res = []
         nextFields = []

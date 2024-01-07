@@ -5,6 +5,7 @@ class SurQLEvent(BaseModel):
         A pydantic SurQL event definition
         whenSDL accepts a list of strings (will be splitted by OR) or a single line string
         querySDL accepts a list of strings to allow multiline queries (can also be a single multiline string)
+        TODO: check name is not a reserved keyword
     """
     name: str = Field(min_length=1)
     whenSDL: str | list[str] = Field(default="", description="event when definition, if list default to OR")

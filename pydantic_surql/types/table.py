@@ -56,6 +56,7 @@ class SurQLTableConfig(BaseModel):
 class SurQLTable(BaseModel):
     """
         A pydantic SurQL table definition
+        TODO: check name is not a reserved keyword
     """
     name: str = Field(min_length=1)
     fields: list[SurQLField]

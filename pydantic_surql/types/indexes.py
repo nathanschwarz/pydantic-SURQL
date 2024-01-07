@@ -36,6 +36,7 @@ RE = re.compile(fr"^snowball\(({SNOWBALL_LANG})\)|ascii|lowercase|uppercase|edge
 class SurQLAnalyzer(BaseModel):
     """
         A pydantic SurQL analyzer definition
+        TODO: check name is not a reserved keyword
     """
     name: str = Field(min_length=1)
     tokenizers: list[SurQLTokenizers] = Field(min_length=1)
@@ -69,7 +70,7 @@ class SurQLAnalyzer(BaseModel):
 class SurQLIndex(BaseModel):
     """
         A pydantic SurQL index definition
-        TODO: implement search indexes
+        TODO: check name is not a reserved keyword
     """
     name: str = Field(min_length=1)
     fields: list[str]
