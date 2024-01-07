@@ -105,10 +105,12 @@ from pydantic_surql import surql_collection
 from pydantic import BaseModel, ConfigDict
 
 @surql_collection("schemaless")
-class SchemaLessCollection(baseModel):
+class SchemaLessCollection(BaseModel):
   model_config = ConfigDict(extra='allow')
   #...
 ```
+
+!!!info you can also define the `strict: false` flag on the `SurQLTableConfig` (the extra value will prime on conflict).<br>if `model_config.extra == None` it will be set to `allow`
 
 ### drop definitions
 
