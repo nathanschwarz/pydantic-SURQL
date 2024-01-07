@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any, Optional
 from pydantic_surql import SurQLParser
 from pydantic_surql.types import SurQLIndex, SurQLNullable, SurQLTableConfig, SurQLType, SurQLField, SurQLView
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 Parser = SurQLParser()
 class TableModel(BaseModel):
@@ -13,17 +13,20 @@ class TableModel(BaseModel):
     birthday: datetime
     nickname: Optional[str] = None
 
-def test_schemafull_table():
+class SchemalessTable(TableModel):
+    model_config = ConfigDict(extra="allow")
+
+def test_strict_schemafull_table():
     """
         Test a schemafull table
     """
     name = "test_table"
-    #mandatory to mark the child table object as a collection internally
+    #mandatory to mark the child table object as a collection inÒternally
     table = Parser.from_model(name, TableModel, SurQLTableConfig(strict=True))
     assert table.name == name
     assert table._table_def() == "DEFINE TABLE %s SCHEMAFULL;" % name
 
-def test_schemaless_table():
+def test_strict_schemaless_table():
     """
         Test a schemaless table
     """
@@ -31,6 +34,22 @@ def test_schemaless_table():
     #mandatory to mark the child table object as a collection internally
     table = Parser.from_model(name, TableModel, config=SurQLTableConfig(strict=False))
     assert table.name == name
+    assert TableModel.model_config.get('extra') == "allow"
+    assert table._table_def() == "DEFINE TABLE %s SCHEMALESS;" % name
+
+    # reset the value to avoid side effects on next tests
+    TableModel.model_config['extra'] = None
+
+def test_strict_schemaless_table_with_extra_allow():
+    """
+        Test a schemaless table with extra allow
+    """
+    name = "test_table"
+    #mandatory to mark the child table object as a collection internally
+    table = Parser.from_model(name, SchemalessTable)
+    assert table.name == name
+    assert SchemalessTable.model_config.get('extra') == "allow"
+    assert table.config.strict == False, "config.strict must be False"
     assert table._table_def() == "DEFINE TABLE %s SCHEMALESS;" % name
 
 def test_table_view():

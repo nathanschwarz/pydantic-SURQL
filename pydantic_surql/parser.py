@@ -125,8 +125,6 @@ class SurQLParser:
         """
             Convert a pydantic model to a SurQLTable
             can be used at runtime
-            TODO: if model.model_config.extra = "allow" => config.strict = False
-            TODO: if config.strict = "allow" => config.strict = False
             TODO: ignore id field
         """
         model.__is_surql_collection__ = True
@@ -135,5 +133,5 @@ class SurQLParser:
         if extra == 'allow':
             config.strict = False
         elif config.strict == False:
-            model.model_config.extra = 'allow'
+            model.model_config['extra'] = 'allow'
         return SurQLTable(name=name, fields=self.from_fields(model), config=config)
