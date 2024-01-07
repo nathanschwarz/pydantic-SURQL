@@ -155,6 +155,19 @@ class BasicTypes(BaseModel):
 print(Metadata.collect())
 ```
 
+this will generate the following SDL:
+
+```surql
+DEFINE TABLE basic_types SCHEMAFULL;
+DEFINE FIELD id ON TABLE basic_types TYPE string;
+DEFINE FIELD string ON TABLE basic_types TYPE string;
+DEFINE FIELD number ON TABLE basic_types TYPE number;
+DEFINE FIELD number_two ON TABLE basic_types TYPE number;
+DEFINE FIELD date ON TABLE basic_types TYPE datetime;
+DEFINE FIELD flag ON TABLE basic_types TYPE bool;
+DEFINE FIELD any_v ON TABLE basic_types TYPE any;
+```
+
 ### union types
 
 to define union types you can use the `Union[T, Y]` or the `|` notation :
@@ -175,6 +188,15 @@ class UnionTypes(BaseModel):
 print(Metadata.collect())
 ```
 
+this will generate the following SDL:
+
+```surql
+DEFINE TABLE union_types SCHEMAFULL;
+DEFINE FIELD id ON TABLE union_types TYPE string;
+DEFINE FIELD str_number ON TABLE union_types TYPE string|number;
+DEFINE FIELD date_timestamp ON TABLE union_types TYPE number|datetime;
+```
+
 ### optional and null types
 
 to define an optional type you can use the `Optional` notation :
@@ -193,6 +215,14 @@ class OptionalTypes(BaseModel):
 print(Metadata.collect())
 ```
 
+this will generate the following SDL:
+
+```surql
+DEFINE TABLE optional_types SCHEMAFULL;
+DEFINE FIELD id ON TABLE optional_types TYPE string;
+DEFINE FIELD opt_str ON TABLE optional_types TYPE optional<string>;
+```
+
 to define a null value you can use the `SurQLNullable` type :
 
 ```python
@@ -207,6 +237,14 @@ class BasicTypes(BaseModel):
     #...
 
 print(Metadata.collect())
+```
+
+this will generate the following SDL:
+
+```surql
+DEFINE TABLE nullable_types SCHEMAFULL;
+DEFINE FIELD id ON TABLE nullable_types TYPE string;
+DEFINE FIELD nullable_str ON TABLE nullable_types TYPE string|null;
 ```
 
 !!!danger using `None` will result in an `optional` field (`Optional[T] <=> T | None`)
@@ -229,6 +267,22 @@ class ArrayTypes(BaseModel):
     #...
 
 print(Metadata.collect())
+```
+
+this will generate the following SDL:
+
+```surql
+DEFINE TABLE array_types SCHEMAFULL;
+DEFINE FIELD id ON TABLE array_types TYPE string;
+DEFINE FIELD str_list ON TABLE array_types TYPE array;
+DEFINE FIELD str_list.* ON TABLE array_types TYPE string|number;
+DEFINE FIELD list_str_list ON TABLE array_types TYPE array;
+DEFINE FIELD list_str_list.* ON TABLE array_types TYPE array;
+DEFINE FIELD list_str_list.*.* ON TABLE array_types TYPE string;
+DEFINE FIELD list_list_str_list ON TABLE array_types TYPE array;
+DEFINE FIELD list_list_str_list.* ON TABLE array_types TYPE array;
+DEFINE FIELD list_list_str_list.*.* ON TABLE array_types TYPE array;
+DEFINE FIELD list_list_str_list.*.*.* ON TABLE array_types TYPE string;
 ```
 
 ### object types
@@ -259,6 +313,12 @@ class ObjectTypes(BaseModel):
 print(Metadata.collect())
 ```
 
+this will generate the following SDL:
+
+```surql
+
+```
+
 !!!warning surql doesn't support recursive objects, if you want to use recursive structures use a [`record` definition](#record-types)
 
 ### record types
@@ -283,4 +343,16 @@ class RecordTypes(BaseModel):
   #...
 
 print(Metadata.collect())
+```
+
+this will generate the following SDL:
+
+```surql
+DEFINE TABLE record_target SCHEMAFULL;
+DEFINE FIELD id ON TABLE record_target TYPE string;
+DEFINE FIELD some_field ON TABLE record_target TYPE string;
+
+DEFINE TABLE record_types SCHEMAFULL;
+DEFINE FIELD id ON TABLE record_types TYPE string;
+DEFINE FIELD record_target ON TABLE record_types TYPE record<record_target>;
 ```
