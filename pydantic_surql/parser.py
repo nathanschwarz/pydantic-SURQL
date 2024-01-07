@@ -125,6 +125,7 @@ class SurQLParser:
             can be used at runtime
             TODO: if model.model_config.extra = "allow" => config.strict = False
             TODO: if config.strict = "allow" => config.strict = False
+            TODO: ignore id field
         """
         model.__is_surql_collection__ = True
         model.__surql_table_name__ = name
