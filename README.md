@@ -104,7 +104,7 @@ to make a collection schemaless you can use [pydantic built in feature](https://
 from pydantic_surql import surql_collection, Metadata
 from pydantic import BaseModel, ConfigDict
 
-@surql_collection("schemaless")
+@surql_collection("schemaless_collection")
 class SchemaLessCollection(BaseModel):
   model_config = ConfigDict(extra='allow')
   #...
@@ -119,7 +119,7 @@ from pydantic_surql import surql_collection, Metadata
 from pydantic_surql.types import SurQLTableConfig
 from pydantic import BaseModel, ConfigDict
 
-@surql_collection("schemaless", SurQLTableConfig(strict=False))
+@surql_collection("schemaless_collection", SurQLTableConfig(strict=False))
 class SchemaLessCollection(BaseModel):
   pass
 
@@ -134,7 +134,7 @@ print(Metadata.collect())
 this will generate the following SDL :
 
 ```surql
-DEFINE TABLE schemaless SCHEMALESS;
+DEFINE TABLE schemaless_collection SCHEMALESS;
 ```
 
 ### drop definitions
@@ -187,7 +187,7 @@ you can define a collection as a view through the config :
 
 ```python
 from pydantic_surql import surql_collection, Metadata
-from pydantic.types import SurQLTableConfig, SurQLView
+from pydantic_surql.types import SurQLTableConfig, SurQLView
 from pydantic import BaseModel
 
 config = SurQLTableConfig(asView=SurQLView(select=["name", "age"], from_t=["users"], where=["age > 18"], group_by=["age"]))
@@ -208,6 +208,47 @@ DEFINE TABLE view_collection AS SELECT name,age FROM users WHERE age > 18 GROUP 
 ### indexes, analyzers and tokenizers definitions
 
 You can define indexes on collections through the config :
+
+```python
+from pydantic_surql import surql_collection, Metadata
+from pydantic import BaseModel, ConfigDict
+from pydantic_surql.types import SurQLTableConfig, SurQLEvent
+
+event_config = SurQLTableConfig(events=[
+  SurQLEvent(
+    name="event_name",
+    whenSDL=["$event = \"INSERT\"", "$event = \"UPDATE\""],
+    querySDL="INSERT INTO notification_collection (name, collection) VALUES ('something changed', 'event_collection')"
+  )])
+@surql_collection("event_collection", event_config)
+class EventCollection(BaseModel):
+    field1: str
+    field2: str
+    field3: str
+
+print(Metadata.collect())
+```
+
+this will generate the following SDL :
+
+```surql
+DEFINE ANALYZER analyzer_name TOKENIZERS blank;
+
+DEFINE TABLE indexed_collection SCHEMAFULL;
+DEFINE FIELD field1 ON TABLE indexed_collection TYPE string;
+DEFINE FIELD field2 ON TABLE indexed_collection TYPE string;
+DEFINE FIELD field3 ON TABLE indexed_collection TYPE string;
+DEFINE INDEX index_name ON TABLE indexed_collection FIELDS field1,field2;
+DEFINE INDEX unique_index_name ON TABLE indexed_collection FIELDS field1,field2 UNIQUE;
+DEFINE INDEX search_index_name ON TABLE indexed_collection FIELDS field3 SEARCH ANALYZER analyzer_name HIGHLIGHTS;
+```
+
+> [!NOTE]
+> only the used tokenizers (used in a configuration) will be collected
+
+## events definitions
+
+You can define events through the collection config :
 
 ```python
 from pydantic_surql import surql_collection, Metadata
@@ -243,21 +284,12 @@ print(Metadata.collect())
 this will generate the following SDL :
 
 ```surql
-DEFINE ANALYZER analyzer_name TOKENIZERS blank;
-
-DEFINE TABLE indexed_collection SCHEMAFULL;
-DEFINE FIELD field1 ON TABLE indexed_collection TYPE string;
-DEFINE FIELD field2 ON TABLE indexed_collection TYPE string;
-DEFINE FIELD field3 ON TABLE indexed_collection TYPE string;
-DEFINE INDEX index_name ON TABLE indexed_collection FIELDS field1,field2;
-DEFINE INDEX unique_index_name ON TABLE indexed_collection FIELDS field1,field2 UNIQUE;
-DEFINE INDEX search_index_name ON TABLE indexed_collection FIELDS field3 SEARCH ANALYZER analyzer_name HIGHLIGHTS;
+DEFINE TABLE event_collection SCHEMAFULL;
+DEFINE FIELD field1 ON TABLE event_collection TYPE string;
+DEFINE FIELD field2 ON TABLE event_collection TYPE string;
+DEFINE FIELD field3 ON TABLE event_collection TYPE string;
+DEFINE EVENT event_name ON TABLE event_collection WHEN $event = "INSERT" OR $event = "UPDATE" THEN (INSERT INTO notification_collection (name, collection) VALUES ('something changed', 'event_collection'));
 ```
-
-> [!NOTE]
-> only the used tokenizers (used in a configuration) will be collected
-
-## events definitions
 
 ## Types definitions
 

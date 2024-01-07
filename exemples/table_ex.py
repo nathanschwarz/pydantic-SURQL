@@ -1,8 +1,9 @@
 from pydantic_surql import surql_collection, Metadata
 from pydantic import BaseModel, ConfigDict
 from pydantic_surql.types import SurQLTableConfig, SurQLView
+from pydantic_surql.types.event import SurQLEvent
 
-@surql_collection("schemaless")
+@surql_collection("schemaless_collection")
 class SchemaLessCollection(BaseModel):
   model_config = ConfigDict(extra='allow')
   #...
@@ -11,7 +12,7 @@ from pydantic_surql import surql_collection, Metadata
 print(Metadata.collect())
 
 Metadata.clear()
-@surql_collection("schemaless", SurQLTableConfig(strict=False))
+@surql_collection("schemaless_collection", SurQLTableConfig(strict=False))
 class SchemaLessConfCollection(BaseModel):
   pass
 
@@ -39,5 +40,20 @@ config = SurQLTableConfig(asView=SurQLView(select=["name", "age"], from_t=["user
 class ViewCollection(BaseModel):
   name: list[str]
   age: str
+
+print(Metadata.collect())
+
+Metadata.clear()
+event_config = SurQLTableConfig(events=[
+  SurQLEvent(
+    name="event_name",
+    whenSDL=["$event = \"INSERT\"", "$event = \"UPDATE\""],
+    querySDL="INSERT INTO notification_collection (name, collection) VALUES ('something changed', 'event_collection')"
+  )])
+@surql_collection("event_collection", event_config)
+class EventCollection(BaseModel):
+    field1: str
+    field2: str
+    field3: str
 
 print(Metadata.collect())
