@@ -134,4 +134,6 @@ class SurQLParser:
         extra = model.model_config.get('extra')
         if extra == 'allow':
             config.strict = False
+        elif config.strict == False:
+            model.model_config.extra = 'allow'
         return SurQLTable(name=name, fields=self.from_fields(model), config=config)
