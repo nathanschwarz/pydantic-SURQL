@@ -9,12 +9,12 @@ it supports the following features
   - [drop](#drop-definitions)
   - [changefeed](#changefeed-definitions)
   - [view](#view-definitions)
-  - [indexes definitions](#indexes-definitions)
-    - [regular indexes](#regular-indexes-definitions)
-    - [unique indexes](#unique-indexes-definitions)
-    - [search indexes](#search-indexes-definitions)
-- [analyzers definition](#anaylizers-definitions)
-- [tokenizers definition](#tokenizers-definitions)
+  - [indexes definitions](#indexes-analyzers-and-tokenizers-definitions)
+    - regular indexes
+    - unique indexes
+    - search indexes
+- [analyzers definition](#indexes-analyzers-and-tokenizers-definitions)
+- [tokenizers definition](#indexes-analyzers-and-tokenizers-definitions)
 - [events definition](#events-definitions)
 
 and the [following types](#types-definitions) out of the box :
@@ -92,6 +92,9 @@ DEFINE FIELD description ON TABLE books TYPE string;
 DEFINE FIELD weight ON TABLE books TYPE number;
 DEFINE FIELD writer ON TABLE books TYPE record<writers>;
 ```
+
+> [!NOTE]
+> only the used tokenizers (used in a configuration) will be collected
 
 ## Collections definitions
 
@@ -205,17 +208,54 @@ this will generate the following SDL :
 DEFINE TABLE view_collection AS SELECT name,age FROM users WHERE age > 18 GROUP BY age;
 ```
 
-### indexes definitions
+### indexes, analyzers and tokenizers definitions
 
-#### regular indexes definitions
+You can define indexes on collections through the config :
 
-#### unique indexes definitions
+```python
+from pydantic_surql import surql_collection, Metadata
+from pydantic import BaseModel, ConfigDict
+from pydantic_surql.types import (
+  SurQLTableConfig,
+  SurQLIndex,
+  SurQLUniqueIndex,
+  SurQLSearchIndex,
+  SurQLAnalyzer,
+  SurQLTokenizers
+)
 
-#### search indexes definitions
+index = SurQLIndex(name="index_name", fields=["field1", "field2"])
+unique_index = SurQLUniqueIndex(name="unique_index_name", fields=["field1", "field2"])
+analyzer = SurQLAnalyzer(name="analyzer_name", tokenizers=[SurQLTokenizers.BLANK])
+search_index = SurQLSearchIndex(
+  name="search_index_name",
+  fields=["field3"],
+  analyzer=analyzer,
+  highlights=True
+)
 
-## anaylizers definitions
+@surql_collection("indexed_collection", SurQLTableConfig(indexes=[index, unique_index, search_index]))
+class IndexedCollection(BaseModel):
+    field1: str
+    field2: str
+    field3: str
 
-## tokenizers definitions
+print(Metadata.collect())
+```
+
+this will generate the following SDL :
+
+```surql
+DEFINE ANALYZER analyzer_name TOKENIZERS blank;
+
+DEFINE TABLE indexed_collection SCHEMAFULL;
+DEFINE FIELD field1 ON TABLE indexed_collection TYPE string;
+DEFINE FIELD field2 ON TABLE indexed_collection TYPE string;
+DEFINE FIELD field3 ON TABLE indexed_collection TYPE string;
+DEFINE INDEX index_name ON TABLE indexed_collection FIELDS field1,field2;
+DEFINE INDEX unique_index_name ON TABLE indexed_collection FIELDS field1,field2 UNIQUE;
+DEFINE INDEX search_index_name ON TABLE indexed_collection FIELDS field3 SEARCH ANALYZER analyzer_name HIGHLIGHTS;
+```
 
 ## events definitions
 
