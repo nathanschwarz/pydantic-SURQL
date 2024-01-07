@@ -2,7 +2,7 @@
 
 Pydantic Surql is a utility set to automatically convert Pydantic models to SURQL SDL definitions.
 
-it supports the following features
+✅ it supports the following features
 
 - [collection definitions (a.k.a tables)](#collections-definitions)
   - [schemafull / schemaless](#schemafull--schemaless-definitions)
@@ -26,18 +26,28 @@ and the [following types](#types-definitions) out of the box :
 - [object](#object-types)
 - [record](#record-types)
 
+❌ what it doesn't support yet :
+
+- SURQL queries definitions (select, update, delete, where, ...). It may be implemented in a complementary package
+
+PRs are welcome 😉
+
+❌ what will not be implemented ❌
+
+- SURQL SDL field validation (validation goes through pydantic, and it's too complex at this stage)
+
 ## installation
 
 To install pydantic-surql run :
 
 ```bash
-pip install pydantic pydantic-surql
+pip install pydantic-surql
 ```
 
 or with poetry :
 
 ```bash
-poetry add pydantic pydantic-surql
+poetry add pydantic-surql
 ```
 
 ## basic usage
