@@ -65,9 +65,10 @@ class SurQLField(BaseModel):
         return f"DEFINE FIELD {field} ON TABLE {table} {'FLEXIBLE ' if isFlexible else ''}TYPE {types};"
 
     @classmethod
-    def surqlFromTypes(cls, table_name: str, field_name: str, types: List[Type]) -> list[str]:
+    def _surqlFromTypes(cls, table_name: str, field_name: str, types: List[Type]) -> list[str]:
         """
             return SDLS fields definitions recursively
+            TODO: remove duplicates (eg: when a field is defined as int | float)
         """
         res = []
         nextFields = []
@@ -81,14 +82,14 @@ class SurQLField(BaseModel):
                 res += [SurQLType.OBJECT.value]
             elif (isinstance(_type, list)):
                 res += [SurQLType.ARRAY.value]
-                nextFields += cls.surqlFromTypes(table_name, f"{field_name}.*", _type)
+                nextFields += cls._surqlFromTypes(table_name, f"{field_name}.*", _type)
             elif (isinstance(_type, cls)):
                 if (_type.types == [SurQLType.RECORD]):
                     res += [SurQLType.RECORD.value % _type.recordLink]
                 else:
                     res += [SurQLType.OBJECT.value]
                     for _field in _type.types:
-                        nextFields += cls.surqlFromTypes(table_name, f"{field_name}.{_field.name}", _field.types)
+                        nextFields += cls._surqlFromTypes(table_name, f"{field_name}.{_field.name}", _field.types)
             elif (_type is SurQLType.OPTIONAL):
                 isOptional = True
             else:
@@ -100,7 +101,7 @@ class SurQLField(BaseModel):
 
     def SDL(self, table_name: str) -> List[str]:
         """return a SDL field definition"""
-        fieldTypes = SurQLField.surqlFromTypes(table_name, self.name, self.types)
+        fieldTypes = SurQLField._surqlFromTypes(table_name, self.name, self.types)
         return "\n".join(fieldTypes)
 
 
