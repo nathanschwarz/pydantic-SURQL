@@ -20,7 +20,7 @@ Pydantic Surql is a utility set to automatically convert Pydantic models to SURQ
 
 and the [following types](#types-definitions) out of the box :
 
-- [basic types (string | int | float | boolean | datetime | any)](#basic-types)
+- [basic types (string | int | float | boolean | datetime | any, enum)](#basic-types)
 - [union](#union-types)
 - [optional and null](#optional-and-null-types)
 - [array](#array-types)
@@ -30,7 +30,6 @@ and the [following types](#types-definitions) out of the box :
 
 ❌ what it doesn't support yet :
 
-- Python enums types
 - Future types
 - Geometry types
 - SURQL queries definitions (select, update, delete, where, ...)
@@ -411,10 +410,19 @@ DEFINE EVENT event_name ON TABLE event_collection WHEN $event = "INSERT" OR $eve
 to define a basic type you can use the following python types :
 
 ```python
+from enum import Enum
 from pydantic_surql import surql_collection, Metadata
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Any
+
+class BasicEnum(Enum):
+    ONE = "ONE"
+    TWO = "TWO"
+    THREE = "THREE"
+    FOUR = 4
+    FIVE = 5
+    SIX = 6
 
 @surql_collection("basic_types")
 class BasicTypes(BaseModel):
@@ -425,6 +433,7 @@ class BasicTypes(BaseModel):
     date: datetime
     flag: bool
     any_v: Any
+    enum_v: BasicEnum
 
 print(Metadata.collect())
 ```
@@ -439,6 +448,7 @@ DEFINE FIELD number_two ON TABLE basic_types TYPE number;
 DEFINE FIELD date ON TABLE basic_types TYPE datetime;
 DEFINE FIELD flag ON TABLE basic_types TYPE bool;
 DEFINE FIELD any_v ON TABLE basic_types TYPE any;
+DEFINE FIELD enum_v ON TABLE basic_types TYPE string|number ASSERT ($value in ["ONE","TWO","THREE",4,5,6]);
 ```
 
 ### union types
