@@ -1,3 +1,4 @@
+from enum import Enum
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Any, Optional, Type, Union, get_origin, get_args
@@ -86,6 +87,10 @@ class SurQLParser:
                     res.append(self.from_type(arg))
             return self.cache.set(_type, [SurQLType.SET, res])
 
+        # is an enum
+        if issubclass(_type, Enum):
+            assertions = ",".join([f'"{item.value}"' if isinstance(item.value, str) else str(item.value) for item in _type])
+            return SurQLField(name=None, types=[SurQLType.ENUM], assertion=f"$value in [{assertions}]")
         # is a pydantic model
         if (issubclass(_type, BaseModel)):
             if hasattr(_type, '__is_surql_collection__'):

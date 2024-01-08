@@ -26,6 +26,7 @@ class SurQLType(Enum):
     DATE = "datetime"
     ANY = "any"
     BOOLEAN = "bool"
+    ENUM = "enum"
     ARRAY = "array"
     OBJECT = "object"
     SET = "set"
@@ -61,14 +62,24 @@ class SurQLField(BaseModel):
     recordLink: Optional[str] = None
     isFlexible: bool = False
     perms: Optional[SurQLPermissions] = None
+    assertion: Optional[str] = None
 
     @classmethod
-    def _f_string(cls, field: str, table: str, types: str, isFlexible: bool, perms: Optional[SurQLPermissions] = None):
+    def _f_string(
+        cls,
+        field: str,
+        table: str,
+        types: str,
+        isFlexible: bool,
+        assertions: Optional[list[str]] = None,
+        perms: Optional[SurQLPermissions] = None
+    ):
         """
             return a SDL field definition string
         """
         return " ".join(e for e in [
             f"DEFINE FIELD {field} ON TABLE {table} {'FLEXIBLE ' if isFlexible else ''}TYPE {types}",
+            f"ASSERT ({' OR '.join(assertions)})" if assertions is not None and len(assertions) > 0 else None,
             perms.SDL() if perms is not None else None
         ] if e != None) + ";"
 
@@ -81,11 +92,14 @@ class SurQLField(BaseModel):
         """
         res = []
         nextFields = []
+        assertions = []
         isOptional = False
         isFlexible = False
         for _type in types:
             if (_type in BASIC_TYPES):
                 res += [_type.value]
+            # if (_type is SurQLType.ENUM):
+            #     res += []
             elif isinstance(_type, list):
                 if (_type[0] == SurQLType.SET):
                     res += [SurQLType.SET.value]
@@ -97,6 +111,9 @@ class SurQLField(BaseModel):
             elif (isinstance(_type, cls)):
                 if (_type.types == [SurQLType.RECORD]):
                     res += [SurQLType.RECORD.value % _type.recordLink]
+                elif (_type.types == [SurQLType.ENUM]):
+                    res += [SurQLType.STRING.value, SurQLType.NUMBER.value]
+                    assertions += [_type.assertion]
                 else:
                     res += [SurQLType.OBJECT.value]
                     isFlexible = _type.isFlexible
@@ -108,8 +125,8 @@ class SurQLField(BaseModel):
             else:
                 raise Exception(f"Unknown type: {_type}, SDL generation not supported")
         if (isOptional):
-            return [cls._f_string(field_name, table_name, SurQLType.OPTIONAL.value % "|".join(res), isFlexible, perms)] + nextFields
-        return [cls._f_string(field_name, table_name, "|".join(res), isFlexible, perms)] + nextFields
+            return [cls._f_string(field_name, table_name, SurQLType.OPTIONAL.value % "|".join(res), isFlexible, assertions, perms)] + nextFields
+        return [cls._f_string(field_name, table_name, "|".join(res), isFlexible, assertions, perms)] + nextFields
 
 
     def SDL(self, table_name: str) -> List[str]:

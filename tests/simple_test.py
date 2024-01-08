@@ -1,3 +1,4 @@
+from enum import Enum
 from datetime import datetime
 from typing import Any, Optional
 from pydantic_surql.parser import SurQLParser
@@ -6,6 +7,17 @@ from pydantic_surql.types import SurQLNullable, SurQLAnyRecord, SurQLType, SurQL
 Parser = SurQLParser()
 F_NAME = "test"
 T_NAME = "test_table"
+
+class EnumData(Enum):
+    """
+        Enum data
+    """
+    A = "a"
+    B = "b"
+    C = "c"
+    D = 1
+    E = 2
+    F = 3
 
 class TestSimpleFields:
     def simple_field_check(self, field: SurQLField, types: list[SurQLType], optional: bool = False):
@@ -100,4 +112,19 @@ class TestSimpleFields:
         self.simple_field_check(field, common_types)
         assert field.SDL(T_NAME) == "\n".join([
             "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "|".join(SDL_types)),
+        ])
+
+    def test_enum(self):
+        """
+            test enum type parsing
+        """
+        field = Parser.from_field(F_NAME, EnumData)
+        subDef = field.types[0]
+        assert field.name == F_NAME
+        assert field.recordLink is None
+        assert subDef.name is None
+        assert subDef.recordLink is None
+        assert subDef.types == [SurQLType.ENUM]
+        assert field.SDL(T_NAME) == "\n".join([
+            "DEFINE FIELD %s ON TABLE %s TYPE string|number ASSERT (%s);" % (F_NAME, T_NAME, subDef.assertion),
         ])
