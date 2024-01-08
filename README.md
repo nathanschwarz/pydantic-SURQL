@@ -13,6 +13,7 @@ Pydantic Surql is a utility set to automatically convert Pydantic models to SURQ
     - regular indexes
     - unique indexes
     - search indexes
+  - [permissions]()
 - [analyzers definition](#indexes-analyzers-and-tokenizers-definitions)
 - [tokenizers definition](#indexes-analyzers-and-tokenizers-definitions)
 - [events definition](#events-definitions)
@@ -272,6 +273,57 @@ DEFINE INDEX search_index_name ON TABLE indexed_collection FIELDS field3 SEARCH 
 
 > [!NOTE]
 > only the used tokenizers (used in a configuration) will be collected
+
+### table permissions
+
+You can define permissions on collections through the config :
+
+```python
+from pydantic_surql import surql_collection, Metadata
+from pydantic import BaseModel, ConfigDict
+from pydantic_surql.types import (
+  SurQLTableConfig,
+  SurQLPermissions,
+)
+
+Metadata.clear()
+permission_config = SurQLTableConfig(
+   permissions=SurQLPermissions(
+    select=["WHERE published = true", "OR user = $auth.id"],
+    create=["WHERE user = $auth.id"],
+    update=["WHERE user = $auth.id"],
+    delete=["WHERE user = $auth.id", "OR $auth.admin = true"]
+  )
+)
+@surql_collection("permission_collection", permission_config)
+class PermissionCollection(BaseModel):
+    field1: str
+    field2: str
+    field3: str
+    published: bool
+
+print(Metadata.collect())
+```
+
+this will generate the following SDL :
+
+```surql
+DEFINE TABLE permission_collection SCHEMAFULL PERMISSIONS
+    FOR SELECT
+        WHERE published = true
+        OR user = $auth.id
+    FOR CREATE
+        WHERE user = $auth.id
+    FOR UPDATE
+        WHERE user = $auth.id
+    FOR DELETE
+        WHERE user = $auth.id
+        OR $auth.admin = true;
+DEFINE FIELD field1 ON TABLE permission_collection TYPE string;
+DEFINE FIELD field2 ON TABLE permission_collection TYPE string;
+DEFINE FIELD field3 ON TABLE permission_collection TYPE string;
+DEFINE FIELD published ON TABLE permission_collection TYPE bool;
+```
 
 ## events definitions
 
