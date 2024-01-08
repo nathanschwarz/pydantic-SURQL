@@ -141,9 +141,9 @@ print(Metadata.collect())
 ```
 
 > [!NOTE]
-> the `model_config.extra` value will prime on conflict.
+> if `model_config.extra == "allow"`, the `table.config.strict` will be set to `true`
 >
-> if `strict == False` and `model_config.extra != 'allow'` it will be set to `allow` automatically
+> if `strict == False`, the `model_config.extra` will be set to `allow`
 
 this will generate the following SDL :
 
