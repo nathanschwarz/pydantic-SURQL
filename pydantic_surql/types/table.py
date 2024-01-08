@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field, field_validator
 from .event import SurQLEvent
 from .field import SurQLField
 from .indexes import SurQLAnalyzer, SurQLIndex
+from .permissions import SurQLPermissions
 
 class SurQLView(BaseModel):
     """
@@ -42,6 +43,7 @@ class SurQLTableConfig(BaseModel):
     drop: bool = Field(default=False, description="set table in DROP mode")
     indexes: list[SurQLIndex] = Field(default=[], description="table indexes definitions")
     events: list[SurQLEvent] = Field(default=[], description="table events definitions")
+    permissions: SurQLPermissions | None = Field(default=None, description="table permissions definitions")
 
     @field_validator("indexes")
     @classmethod
@@ -77,6 +79,8 @@ class SurQLTable(BaseModel):
                 f"CHANGEFEED {self.config.changeFeed}" if self.config.changeFeed is not None else None,
             ]
             _def = [e for e in _def if e is not None]
+        if (self.config.permissions is not None):
+            _def.append(self.config.permissions.SDL())
         return " ".join(_def) + ';'
 
     def SDL(self):
