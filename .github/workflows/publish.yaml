@@ -1,7 +1,17 @@
-- name: Publish python poetry package
-  uses: JRubics/poetry-publish@v1.17
-  with:
-    python_version: "3.11.6"
-    pypi-token: ${{ secrets.PYPI_TOKEN }}
-    build_format: sdist
-    ignore_dev_requirements: "yes"
+name: Python package
+on:
+  push:
+    tags:
+      - "v*.*.*"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build and publish to pypi
+        uses: JRubics/poetry-publish@v1.17
+        with:
+          python_version: "3.11.6"
+          pypi-token: ${{ secrets.PYPI_TOKEN }}
+          build_format: sdist
+          ignore_dev_requirements: "yes"
