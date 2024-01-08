@@ -13,7 +13,7 @@ Pydantic Surql is a utility set to automatically convert Pydantic models to SURQ
     - regular indexes
     - unique indexes
     - search indexes
-  - [permissions]()
+  - [fields and tables permissions](#table-an-field-permissions)
 - [analyzers definition](#indexes-analyzers-and-tokenizers-definitions)
 - [tokenizers definition](#indexes-analyzers-and-tokenizers-definitions)
 - [events definition](#events-definitions)
