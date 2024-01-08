@@ -1,8 +1,11 @@
 from typing import List, Type, Union, Sequence
 from enum import Enum
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from pydantic.fields import FieldInfo
 from typing_extensions import TypeAliasType
+
+from .permissions import SurQLPermissions
 
 """
     A custom type to define a nullable field
@@ -57,16 +60,20 @@ class SurQLField(BaseModel):
     types: RecursiveType
     recordLink: Optional[str] = None
     isFlexible: bool = False
+    perms: Optional[SurQLPermissions] = None
 
     @classmethod
-    def _f_string(cls, field: str, table: str, types: str, isFlexible: bool):
+    def _f_string(cls, field: str, table: str, types: str, isFlexible: bool, perms: Optional[SurQLPermissions] = None):
         """
             return a SDL field definition string
         """
-        return f"DEFINE FIELD {field} ON TABLE {table} {'FLEXIBLE ' if isFlexible else ''}TYPE {types};"
+        return " ".join(e for e in [
+            f"DEFINE FIELD {field} ON TABLE {table} {'FLEXIBLE ' if isFlexible else ''}TYPE {types}",
+            perms.SDL() if perms is not None else None
+        ] if e != None) + ";"
 
     @classmethod
-    def _surqlFromTypes(cls, table_name: str, field_name: str, types: List[Type]) -> list[str]:
+    def _surqlFromTypes(cls, table_name: str, field_name: str, types: List[Type], perms: Optional[SurQLPermissions] = None) -> list[str]:
         """
             return SDLS fields definitions recursively
             TODO: remove duplicates (eg: when a field is defined as int | float)
@@ -85,7 +92,8 @@ class SurQLField(BaseModel):
                     nextFields += cls._surqlFromTypes(table_name, f"{field_name}.*", _type[1])
                 else:
                     res += [SurQLType.ARRAY.value]
-                    nextFields += cls._surqlFromTypes(table_name, f"{field_name}.*", _type)
+                    _perms = getattr(_type, "perms", None)
+                    nextFields += cls._surqlFromTypes(table_name, f"{field_name}.*", _type, _perms)
             elif (isinstance(_type, cls)):
                 if (_type.types == [SurQLType.RECORD]):
                     res += [SurQLType.RECORD.value % _type.recordLink]
@@ -93,22 +101,39 @@ class SurQLField(BaseModel):
                     res += [SurQLType.OBJECT.value]
                     isFlexible = _type.isFlexible
                     for _field in _type.types:
-                        nextFields += cls._surqlFromTypes(table_name, f"{field_name}.{_field.name}", _field.types)
+                        _perms = getattr(_field, "perms", None)
+                        nextFields += cls._surqlFromTypes(table_name, f"{field_name}.{_field.name}", _field.types, _perms)
             elif (_type is SurQLType.OPTIONAL):
                 isOptional = True
             else:
                 raise Exception(f"Unknown type: {_type}, SDL generation not supported")
         if (isOptional):
-            return [cls._f_string(field_name, table_name, SurQLType.OPTIONAL.value % "|".join(res), isFlexible)] + nextFields
-        return [cls._f_string(field_name, table_name, "|".join(res), isFlexible)] + nextFields
+            return [cls._f_string(field_name, table_name, SurQLType.OPTIONAL.value % "|".join(res), isFlexible, perms)] + nextFields
+        return [cls._f_string(field_name, table_name, "|".join(res), isFlexible, perms)] + nextFields
 
 
     def SDL(self, table_name: str) -> List[str]:
         """return a SDL field definition"""
-        fieldTypes = SurQLField._surqlFromTypes(table_name, self.name, self.types)
+        fieldTypes = SurQLField._surqlFromTypes(table_name, self.name, self.types, self.perms)
         return "\n".join(fieldTypes)
 
 
     __hash__ = object.__hash__
 
 SurQLField.model_rebuild()
+
+class SurQLFieldInfo(FieldInfo):
+    """
+        A pydantic SurQL field info definition
+    """
+    perms: Optional[SurQLPermissions] = None
+
+    def __init__(self, perms: Optional[SurQLPermissions], **kwargs):
+        super().__init__(**kwargs)
+        self.perms = perms
+
+def SurQLFieldConfig(permissions: Optional[SurQLPermissions] = None, **kwargs):
+    """
+        A pydantic SurQL field config definition
+    """
+    return SurQLFieldInfo(permissions, *kwargs)

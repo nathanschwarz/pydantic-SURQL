@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Optional
 from pydantic_surql.parser import SurQLParser
 from pydantic_surql.types import SurQLNullable, SurQLType, SurQLField
 from pydantic import BaseModel

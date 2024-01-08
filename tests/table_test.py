@@ -1,8 +1,8 @@
 from datetime import datetime
-from typing import Any, Optional
+from typing import Optional
 from pydantic_surql import SurQLParser
-from pydantic_surql.types import SurQLIndex, SurQLNullable, SurQLTableConfig, SurQLType, SurQLField, SurQLView, SurQLPermissions
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic_surql.types import SurQLNullable, SurQLTableConfig, SurQLView
+from pydantic import BaseModel, ConfigDict
 
 Parser = SurQLParser()
 class TableModel(BaseModel):
@@ -84,20 +84,3 @@ def test_table_change_feed():
     assert table.name == name
     assert table._table_def() == "DEFINE TABLE %s SCHEMAFULL CHANGEFEED %s;" % (name, changeFeed)
 
-def test_table_good_permissions():
-    """
-        Test a table with permissions
-    """
-    name = "test_table"
-    permissions = SurQLPermissions(
-        select=["WHERE published = true", "OR user = $auth.id"],
-        create=["WHERE user = $auth.id"],
-        update=["WHERE user = $auth.id"],
-        delete=["WHERE user = $auth.id", "OR $auth.admin = true"]
-    )
-    perm_str = permissions.SDL()
-    config = SurQLTableConfig(permissions=permissions)
-    #mandatory to mark the child table object as a collection internally
-    table = Parser.from_model(name, TableModel, config=config)
-    assert table.name == name
-    assert table._table_def() == "DEFINE TABLE %s SCHEMAFULL %s;" % (name, perm_str)

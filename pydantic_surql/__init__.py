@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from .parser import SurQLParser
-from .types import SurQLTable, SurQLMetadata, SurQLTableConfig
+from .types import SurQLMetadata, SurQLTableConfig
 
 Parser = SurQLParser()
 Metadata = SurQLMetadata()

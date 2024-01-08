@@ -3,6 +3,8 @@ from datetime import datetime
 from typing import Any, Optional, Type, Union, get_origin, get_args
 from types import UnionType, NoneType, GenericAlias
 
+from pydantic_surql.types.field import SurQLFieldInfo
+
 from .cache import Cache
 from .types import RecursiveType, SurQLAnyRecord, SurQLField, SurQLType, SurQLNullable, SurQLTable, SurQLTableConfig
 
@@ -130,9 +132,13 @@ class SurQLParser:
         """
         fields = []
         for field_name, field in model.model_fields.items():
+            perms = None
+            if isinstance(field, SurQLFieldInfo):
+                perms = field.perms
             if (field_name != 'id' or model.__is_surql_collection__ == False):
                 _field = None
                 _field = self.from_field(field_name, field.annotation)
+                _field.perms = perms
                 fields.append(_field)
         return fields
 
