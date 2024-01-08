@@ -274,7 +274,7 @@ DEFINE INDEX search_index_name ON TABLE indexed_collection FIELDS field3 SEARCH 
 > [!NOTE]
 > only the used tokenizers (used in a configuration) will be collected
 
-### table permissions
+### table an field permissions
 
 You can define permissions on collections through the config :
 
@@ -325,6 +325,52 @@ DEFINE FIELD field3 ON TABLE permission_collection TYPE string;
 DEFINE FIELD published ON TABLE permission_collection TYPE bool;
 ```
 
+You can define field permissions throught the `SurQLFieldConfig` function.\
+it's a wrapper around the pydantic `Field` function (so you can use all the properties from the `Field` definition) :
+
+```python
+from pydantic_surql import surql_collection, Metadata
+from pydantic import BaseModel, ConfigDict
+from pydantic_surql.types import (
+  SurQLTableConfig,
+  SurQLPermissions,
+  SurQLFieldConfig
+)
+
+fields_permission = SurQLPermissions(
+    select=["WHERE user = $auth.id"],
+    create=["WHERE user = $auth.id"],
+    update=["WHERE user = $auth.id"],
+    delete=["WHERE user = $auth.id", "OR $auth.admin = true"]
+)
+@surql_collection("permission_collection", permission_config)
+class FieldPermissionsCollection(BaseModel):
+    field1: str = SurQLFieldConfig(permissions=fields_permission, min_length=2)
+    field2: str
+    field3: str
+    published: bool
+
+print(Metadata.collect())
+```
+
+this will generate the following SDL:
+
+```surql
+DEFINE FIELD field1 ON TABLE field_permission_collection TYPE string PERMISSIONS
+    FOR SELECT
+        WHERE user = $auth.id
+    FOR CREATE
+        WHERE user = $auth.id
+    FOR UPDATE
+        WHERE user = $auth.id
+    FOR DELETE
+        WHERE user = $auth.id
+        OR $auth.admin = true;
+DEFINE FIELD field2 ON TABLE field_permission_collection TYPE string;
+DEFINE FIELD field3 ON TABLE field_permission_collection TYPE string;
+DEFINE FIELD published ON TABLE field_permission_collection TYPE bool;
+```
+
 ## events definitions
 
 You can define events through the collection config :
@@ -349,7 +395,7 @@ class EventCollection(BaseModel):
 print(Metadata.collect())
 ```
 
-this will generate the following SDL :
+this will generate the following SDL:
 
 ```surql
 DEFINE ANALYZER analyzer_name TOKENIZERS blank;

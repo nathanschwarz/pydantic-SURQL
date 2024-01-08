@@ -17,7 +17,7 @@ perms = SurQLPermissions.model_construct(
 
 Parser = SurQLParser()
 class GrandChildObject(BaseModel):
-    phone: str = SurQLFieldConfig(permissions=perms)
+    phone: str = SurQLFieldConfig(permissions=perms, min_length=8)
 
 class ChildObject(BaseModel):
     address: str = SurQLFieldConfig(permissions=perms)
@@ -78,7 +78,10 @@ def test_table_fields_perms():
         "DEFINE FIELD arr_child.*.obj ON TABLE %s TYPE object;" % name,
         "DEFINE FIELD arr_child.*.obj.phone ON TABLE %s TYPE string %s;" % (name, perms_sdl),
     ])
-    # print(truth)
-    # print("--------------------")
-    # print(sdl)
     assert sdl == truth
+
+    # check that the fields validation works
+    try:
+        GrandChildObject(phone="2")
+    except BaseException as e:
+        assert True
