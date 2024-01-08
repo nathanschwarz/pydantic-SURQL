@@ -1,0 +1,6 @@
+- name: Publish python poetry package
+  uses: JRubics/poetry-publish@v1.17
+  with:
+    python_version: "3.11.6"
+    pypi-token: ${{ secrets.PYPI_TOKEN }}
+    build_format: sdist
