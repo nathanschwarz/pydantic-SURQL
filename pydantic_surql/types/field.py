@@ -122,9 +122,6 @@ class SurQLField(BaseModel):
 
 SurQLField.model_rebuild()
 
-__SURQL_FIELD_PARAMETERS__ = inspect.signature(Field).parameters
-
-
 class SurQLFieldInfo(FieldInfo):
     """
         A pydantic SurQL field info definition
@@ -138,6 +135,6 @@ class SurQLFieldInfo(FieldInfo):
 def SurQLFieldConfig(permissions: Optional[SurQLPermissions] = None, **kwargs) -> SurQLFieldInfo:
     """
         A pydantic SurQL field config definition
-        TODO: find a way to map Field arguments for proper type hints
+        TODO: find a way to map Field arguments for proper type hints (see: https://stackoverflow.com/questions/1409295/set-function-signature-in-python)
     """
     return SurQLFieldInfo(permissions, *kwargs)
