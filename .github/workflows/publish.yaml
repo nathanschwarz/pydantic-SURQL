@@ -4,3 +4,4 @@
     python_version: "3.11.6"
     pypi-token: ${{ secrets.PYPI_TOKEN }}
     build_format: sdist
+    ignore_dev_requirements: "yes"
