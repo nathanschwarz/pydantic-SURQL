@@ -36,12 +36,9 @@ and the [following types](#types-definitions) out of the box :
 - SURQL queries definitions (select, update, delete, where, ...)
 - SURQL functions definitions
 - SURQL scopes definitions
+- SURQL SDL field validation (validation goes through pydantic, and it's too complex at this stage)
 
 PRs are welcome 😉
-
-❌ what will not be implemented ❌
-
-- SURQL SDL field validation (validation goes through pydantic, and it's too complex at this stage)
 
 ## installation
 
