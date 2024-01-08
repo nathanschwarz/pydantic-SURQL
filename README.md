@@ -36,6 +36,11 @@ and the [following types](#types-definitions) out of the box :
 - SURQL functions definitions
 - SURQL scopes definitions
 - SURQL SDL field validation (validation goes through pydantic, too complex at this stage)
+- namespaces definitions
+- databases definitions
+- users definitions
+- tokens definitions
+- params definitions
 
 PRs are welcome 😉
 
