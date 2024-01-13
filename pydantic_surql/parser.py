@@ -140,7 +140,8 @@ class SurQLParser:
             perms = None
             if isinstance(field, SurQLFieldInfo):
                 perms = field.perms
-            if (field_name != 'id' or model.__is_surql_collection__ == False):
+            is_collection = getattr(model, '__is_surql_collection__', False)
+            if (field_name != 'id' or is_collection == False):
                 _field = None
                 _field = self.from_field(field_name, field.annotation)
                 _field.perms = perms
