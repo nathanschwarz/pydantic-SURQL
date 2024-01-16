@@ -85,14 +85,14 @@ def test_object():
         "DEFINE FIELD score ON TABLE test_table TYPE number|null;",
         "DEFINE FIELD is_active ON TABLE test_table TYPE bool;",
         "DEFINE FIELD birthday ON TABLE test_table TYPE datetime;",
-        "DEFINE FIELD nickname ON TABLE test_table TYPE optional<string>;",
+        "DEFINE FIELD nickname ON TABLE test_table TYPE option<string>;",
     ]
     assert fields[6].SDL(table) == "\n".join(
         ["DEFINE FIELD %s ON TABLE %s TYPE %s;" % ("details", table, "object")] +
         [e % ("details", table) for e in detailsSDL]
     )
     assert fields[7].SDL(table) == "\n".join(
-        ["DEFINE FIELD %s ON TABLE %s TYPE %s;" % ("details_opt", table, "optional<object>")] +
+        ["DEFINE FIELD %s ON TABLE %s TYPE %s;" % ("details_opt", table, "option<object>")] +
         [e % ("details_opt", table) for e in detailsSDL]
     )
     assert fields[8].SDL(table) == "\n".join(

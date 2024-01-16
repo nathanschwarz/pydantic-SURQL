@@ -28,7 +28,7 @@ class TestSimpleArrayFields:
         field = Parser.from_field(F_NAME, __type)
         self.simple_field_check(field, [[surql_type]], optional)
         assert field.SDL(T_NAME) == "\n".join([
-            "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "optional<array>" if optional else "array"),
+            "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "option<array>" if optional else "array"),
             "DEFINE FIELD %s.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, surql_type.value)
         ])
 
@@ -83,18 +83,18 @@ class TestSimpleArrayFields:
 
     def test_optional(self):
         """
-            test optional<array<str>> type parsing and SDL generation
+            test option<array<str>> type parsing and SDL generation
         """
         self.common_check(str, SurQLType.STRING, True)
 
     def test_optional_nullable(self):
         """
-            test optional<array<str | null>> nullable type parsing and SDL generation
+            test option<array<str | null>> nullable type parsing and SDL generation
         """
         field = Parser.from_field(F_NAME, Optional[list[str | SurQLNullable]])
         self.simple_field_check(field, [[SurQLType.STRING, SurQLType.NULL]], True)
         assert field.SDL(T_NAME) == "\n".join([
-            "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "optional<array>"),
+            "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "option<array>"),
             "DEFINE FIELD %s.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "string|null"),
         ])
 

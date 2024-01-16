@@ -71,10 +71,10 @@ def test_record():
         "DEFINE FIELD score ON TABLE %s TYPE number|null;" % table.name,
         "DEFINE FIELD is_active ON TABLE %s TYPE bool;" % table.name,
         "DEFINE FIELD birthday ON TABLE %s TYPE datetime;" % table.name,
-        "DEFINE FIELD nickname ON TABLE %s TYPE optional<string>;" % table.name,
+        "DEFINE FIELD nickname ON TABLE %s TYPE option<string>;" % table.name,
         "DEFINE FIELD details ON TABLE %s TYPE record<child_table>;" % table.name,
-        "DEFINE FIELD details_opt ON TABLE %s TYPE optional<record<child_table>>;" % table.name,
+        "DEFINE FIELD details_opt ON TABLE %s TYPE option<record<child_table>>;" % table.name,
         "DEFINE FIELD details_arr ON TABLE %s TYPE array;" % table.name,
         "DEFINE FIELD details_arr.* ON TABLE %s TYPE record<child_table>;" % table.name,
-        "DEFINE FIELD details_recursive ON TABLE %s TYPE optional<record<%s>>;" % (table.name, table.name)
+        "DEFINE FIELD details_recursive ON TABLE %s TYPE option<record<%s>>;" % (table.name, table.name)
     ])

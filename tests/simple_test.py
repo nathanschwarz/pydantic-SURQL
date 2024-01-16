@@ -39,7 +39,7 @@ class TestSimpleFields:
         field = Parser.from_field(F_NAME, __type)
         self.simple_field_check(field, [surql_type], optional)
         assert field.SDL(T_NAME) == "\n".join([
-            "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, f"optional<{surql_type.value}>" if optional else surql_type.value),
+            "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, f"option<{surql_type.value}>" if optional else surql_type.value),
         ])
 
     def test_str(self):

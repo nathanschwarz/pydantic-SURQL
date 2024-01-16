@@ -32,7 +32,7 @@ class SurQLType(Enum):
     SET = "set"
     RECORD = "record<%s>"
     ANY_RECORD = "record()"
-    OPTIONAL = "optional<%s>"
+    OPTIONAL = "option<%s>"
     NULL = "null"
 
 BASIC_TYPES: list[SurQLType] = [

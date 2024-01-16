@@ -28,7 +28,7 @@ class TestSimplesetFields:
         field = Parser.from_field(F_NAME, __type)
         self.simple_field_check(field, [[SurQLType.SET, [surql_type]]], optional)
         assert field.SDL(T_NAME) == "\n".join([
-            "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "optional<set>" if optional else "set"),
+            "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "option<set>" if optional else "set"),
             "DEFINE FIELD %s.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, surql_type.value)
         ])
 
@@ -83,18 +83,18 @@ class TestSimplesetFields:
 
     def test_optional(self):
         """
-            test optional<set<str>> type parsing and SDL generation
+            test option<set<str>> type parsing and SDL generation
         """
         self.common_check(str, SurQLType.STRING, True)
 
     def test_optional_nullable(self):
         """
-            test optional<set<str | null>> nullable type parsing and SDL generation
+            test option<set<str | null>> nullable type parsing and SDL generation
         """
         field = Parser.from_field(F_NAME, Optional[set[str | SurQLNullable]])
         self.simple_field_check(field, [[SurQLType.SET, [SurQLType.STRING, SurQLType.NULL]]], True)
         assert field.SDL(T_NAME) == "\n".join([
-            "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "optional<set>"),
+            "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "option<set>"),
             "DEFINE FIELD %s.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "string|null"),
         ])
 

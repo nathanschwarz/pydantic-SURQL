@@ -67,7 +67,7 @@ def test_table_fields_perms():
         "DEFINE FIELD score ON TABLE %s TYPE number|null;" % name,
         "DEFINE FIELD is_active ON TABLE %s TYPE bool;" % name,
         "DEFINE FIELD birthday ON TABLE %s TYPE datetime;" % name,
-        "DEFINE FIELD nickname ON TABLE %s TYPE optional<string>;" % name,
+        "DEFINE FIELD nickname ON TABLE %s TYPE option<string>;" % name,
         "DEFINE FIELD child ON TABLE %s TYPE object %s;" % (name, perms_sdl),
         "DEFINE FIELD child.address ON TABLE %s TYPE string %s;" % (name, perms_sdl),
         "DEFINE FIELD child.obj ON TABLE %s TYPE object;" % name,

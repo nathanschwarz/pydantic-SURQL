@@ -105,7 +105,7 @@ DEFINE FIELD birthdate ON TABLE writers TYPE datetime;
 
 DEFINE TABLE books SCHEMAFULL;
 DEFINE FIELD title ON TABLE books TYPE string;
-DEFINE FIELD pages ON TABLE books TYPE optional<number>;
+DEFINE FIELD pages ON TABLE books TYPE option<number>;
 DEFINE FIELD description ON TABLE books TYPE string;
 DEFINE FIELD weight ON TABLE books TYPE number;
 DEFINE FIELD writer ON TABLE books TYPE record<writers>;
@@ -506,7 +506,7 @@ this will generate the following SDL:
 
 ```surql
 DEFINE TABLE optional_types SCHEMAFULL;
-DEFINE FIELD opt_str ON TABLE optional_types TYPE optional<string>;
+DEFINE FIELD opt_str ON TABLE optional_types TYPE option<string>;
 ```
 
 to define a null value you can use the `SurQLNullable` type :
