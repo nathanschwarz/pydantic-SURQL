@@ -1,3 +1,4 @@
+from typing import overload
 from pydantic import BaseModel
 from .parser import SurQLParser
 from .types import SurQLMetadata, SurQLTableConfig
@@ -19,3 +20,8 @@ def surql_collection(name: str, config: SurQLTableConfig = SurQLTableConfig()):
                     Metadata.analyzers += [index.analyzer]
         return model
     return inner
+
+@overload
+def surql_collection(name: str, config: dict = {}):
+    _config = SurQLTableConfig.model_validate(config)
+    return surql_collection(name, _config)
