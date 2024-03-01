@@ -5,6 +5,7 @@ from typing import Any, Optional, Type, Union, get_origin, get_args
 from types import UnionType, NoneType, GenericAlias
 
 from pydantic_surql.types.field import SurQLFieldInfo
+from pydantic_surql.types.meta import BaseType, SurQLModel
 
 from .cache import Cache
 from .types import RecursiveType, SurQLAnyRecord, SurQLField, SurQLType, SurQLNullable, SurQLTable, SurQLTableConfig
@@ -131,7 +132,7 @@ class SurQLParser:
         types = self.from_field_type(annotation)
         return SurQLField(name=name, types=types)
 
-    def from_fields(self, model: BaseModel) -> list[SurQLField]:
+    def from_fields(self, model: BaseType) -> list[SurQLField]:
         """
             Parse a pydantic model to a list of SurQLField
         """
@@ -148,13 +149,22 @@ class SurQLParser:
                 fields.append(_field)
         return fields
 
+    def __rewriteClass(self, model: BaseModel):
+        """
+            Rewrite the class to add the surql_table_name and is_surql_collection attributes
+        """
+        class RewritenClass(BaseType, model):
+            __repr_name__ = model.__name__
+            _is_surql_collection__ = True
+            __surql_table_name__ = model.__name__
+        return RewritenClass
+
     def from_model(self, name: str, model: BaseModel, config: SurQLTableConfig = SurQLTableConfig()) -> SurQLTable:
         """
             Convert a pydantic model to a SurQLTable
             can be used at runtime
         """
-        model.__is_surql_collection__ = True
-        model.__surql_table_name__ = name
+        model = self.__rewriteClass(model)
         extra = model.model_config.get('extra')
         if extra == 'allow':
             config.strict = False
