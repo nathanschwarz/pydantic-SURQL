@@ -2,7 +2,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import Enum
 from types import GenericAlias, NoneType
-from typing import Any, Optional, Type, get_args
+from typing import Any, Optional, Type, TypeVar, get_args
 from pydantic import BaseModel, field_validator, field_serializer
 
 from pydantic_surql.types.utils import SurQLAnyRecord, SurQLNullable, is_union
@@ -12,6 +12,9 @@ from pydantic_surql.types.permissions import SurQLPermissions
 class BaseType(BaseModel):
     __is_surql_collection__: bool
     __surql_table_name__: str
+    __surql_schema__: Schema
+
+T_BaseType = TypeVar('T_BaseType', bound=(BaseType))
 
 class Schema(BaseModel):
     """
@@ -35,12 +38,15 @@ class Schema(BaseModel):
 class MetaType(BaseModel):
     type: SurQLType
     original: Type
+    subType: Type | None = None
 
-    @field_serializer('original')
-    def serialize_orignal(self, value: Type) -> str:
+    @field_serializer('original', 'subType')
+    def serialize_orignal(self, value: Type | None) -> str | None:
         """
             Serialize the original type
         """
+        if (value is None):
+            return None
         return value.__name__
 
     @property
@@ -109,13 +115,11 @@ class MetaType(BaseModel):
             return SurQLType.OPTIONAL
         if (type == SurQLAnyRecord):
             return SurQLType.ANY_RECORD
-
         if issubclass(type, Enum):
             return SurQLType.ENUM
+        if issubclass(type, BaseType):
+            return SurQLType.RECORD
         if (issubclass(type, BaseModel)):
-            isCollection = hasattr(type, '__is_surql_collection__') and type.__is_surql_collection__
-            if (isCollection):
-                return SurQLType.RECORD
             return SurQLType.OBJECT
         raise ValueError(f"Type {type} is not supported")
 
@@ -126,13 +130,17 @@ class MetaType(BaseModel):
         """
         _type = MetaType.__get_type(originalType)
         _original = originalType
+        subType = None
         if (_type == SurQLType.ARRAY):
             _original = list
+            subType = get_args(originalType)[0]
         elif (_type == SurQLType.SET):
             _original = set
+            subType = get_args(originalType)[0]
         return MetaType(
             type=_type,
             original=_original,
+            subType=subType
         )
 
 class SchemaField(BaseModel):
@@ -170,8 +178,7 @@ class SchemaField(BaseModel):
             if (meta_wd.type == SurQLType.OBJECT):
                 definition = Schema.from_pydantic_model(type, name)
             else:
-                subType = get_args(type)[0]
-                definition = SchemaField.from_type(f"{name}.*", subType)
+                definition = SchemaField.from_type(f"{name}.*", meta_wd.subType)
         return SchemaField(name=name, meta=meta, definition=definition)
 
 SchemaField.model_rebuild()

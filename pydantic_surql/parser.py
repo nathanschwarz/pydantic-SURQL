@@ -1,5 +1,6 @@
+from typing import Type
 from pydantic import BaseModel
-from pydantic_surql.types.meta import BaseType, Schema
+from pydantic_surql.types.meta import BaseType, Schema, T_BaseType
 
 from .cache import Cache
 from .types import SurQLTableConfig
@@ -136,26 +137,28 @@ class SurQLParser:
     #             fields.append(_field)
     #     return fields
 
-    def __rewriteClass(self, model: BaseModel):
+    def __rewriteClass(self, model: Type, name: str):
         """
             Rewrite the class to add the surql_table_name and is_surql_collection attributes
         """
-        class RewritenClass(BaseType, model):
-            __repr_name__ = model.__name__
-            _is_surql_collection__ = True
-            __surql_table_name__ = model.__name__
-        return RewritenClass
+        class DecoratedModel(BaseType, model):
+            __is_surql_collection__ = True
+            __surql_table_name__ = name
+            __surql_schema__ = Schema.from_pydantic_model(model, name)
+        DecoratedModel.__name__ = model.__name__
+        DecoratedModel.__qualname__ = model.__qualname__
+        DecoratedModel.__module__ = model.__module__
+        return DecoratedModel
 
-    def from_model(self, name: str, model: BaseModel, config: SurQLTableConfig = SurQLTableConfig()) -> Schema:
+    def from_model(self, name: str, model: BaseModel, config: SurQLTableConfig = SurQLTableConfig()):
         """
             Convert a pydantic model to a SurQLTable
             can be used at runtime
         """
-        model = self.__rewriteClass(model)
         extra = model.model_config.get('extra')
         if extra == 'allow':
             config.strict = False
         elif config.strict == False:
             model.model_config['extra'] = 'allow'
-        return Schema.from_pydantic_model(model, name)
+        return self.__rewriteClass(model, name)
         #return SurQLTable(name=name, fields=self.from_fields(model), config=config)
