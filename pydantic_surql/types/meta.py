@@ -141,7 +141,7 @@ class SchemaField(BaseModel):
     """
     name: str
     meta: list[MetaType]
-    schema: Schema | SchemaField | None = None
+    definition: Schema | SchemaField | None = None
 
     @field_validator('meta')
     @classmethod
@@ -159,7 +159,7 @@ class SchemaField(BaseModel):
             Create a schema field from a type
         """
         meta = []
-        schema = None
+        definition = None
         if (is_union(type)):
             types = get_args(type)
             meta: list[MetaType] = [MetaType.from_type(t) for t in types]
@@ -168,10 +168,10 @@ class SchemaField(BaseModel):
         meta_wd = next((x for x in meta if x.hasDefinition), None)
         if (meta_wd is not None):
             if (meta_wd.type == SurQLType.OBJECT):
-                schema = Schema.from_pydantic_model(type, name)
+                definition = Schema.from_pydantic_model(type, name)
             else:
                 subType = get_args(type)[0]
-                schema = SchemaField.from_type(f"{name}.*", subType)
-        return SchemaField(name=name, meta=meta, schema=schema)
+                definition = SchemaField.from_type(f"{name}.*", subType)
+        return SchemaField(name=name, meta=meta, definition=definition)
 
 SchemaField.model_rebuild()

@@ -18,7 +18,7 @@ def surql_collection(name: str, config: SurQLTableConfig = SurQLTableConfig()):
     """
     def inner(model: BaseModel):
         schema = Parser.from_model(name, model, config)
-        print(schema.model_dump(mode="json"))
+        print(schema.model_dump_json(indent=2))
         # Metadata.tables += [table]
         # for index in table.config.indexes:
         #     if hasattr(index, "analyzer") and index.analyzer is not None:

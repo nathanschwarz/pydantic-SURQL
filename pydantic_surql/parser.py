@@ -157,5 +157,5 @@ class SurQLParser:
             config.strict = False
         elif config.strict == False:
             model.model_config['extra'] = 'allow'
-        return Schema.from_pydantic_model(model)
+        return Schema.from_pydantic_model(model, name)
         #return SurQLTable(name=name, fields=self.from_fields(model), config=config)
