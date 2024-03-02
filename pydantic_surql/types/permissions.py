@@ -1,13 +1,13 @@
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 class SurQLPermissions(BaseModel):
     """
         A pydantic SurQL table / field permissions definition
     """
-    select: list[str] | None = None
-    create: list[str] | None = None
-    update: list[str] | None = None
-    delete: list[str] | None = None
+    select: list[str] | None = Field(default=None, min_length=1, description="select statements")
+    create: list[str] | None = Field(default=None, min_length=1, description="create statements")
+    update: list[str] | None = Field(default=None, min_length=1, description="update statements")
+    delete: list[str] | None = Field(default=None, min_length=1, description="delete statements")
 
     @staticmethod
     def __term_sdl__(term: str, definitions: list[str]) -> str:
@@ -28,14 +28,9 @@ class SurQLPermissions(BaseModel):
         return "\n    ".join([e for e in _def if e is not None])
 
     @model_validator(mode="after")
-    @classmethod
-    def check_permissions(cls, v):
+    def validate_permissions(self) -> 'SurQLPermissions':
         """
             check if permissions are valid
         """
-        assert v.select is None or len(v.select) > 0, "SELECT permissions must have at least one permission set"
-        assert v.create is None or len(v.create) > 0, "CREATE permissions must have at least one permission set"
-        assert v.update is None or len(v.update) > 0, "UPDATE permissions must have at least one permission set"
-        assert v.delete is None or len(v.delete) > 0, "DELETE permissions must have at least one permission set"
-        assert any([v.select != None, v.create != None, v.update != None, v.delete != None]), "Permissions must have at least one permission set"
-        return v
+        assert any([self.select != None, self.create != None, self.update != None, self.delete != None]), "Permissions must have at least one permission set"
+        return self

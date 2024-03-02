@@ -1,39 +1,13 @@
-from typing import List, Type, Union, Sequence
+from typing import Type, Union, Sequence
 from enum import Enum
 from typing import Optional
 from pydantic import BaseModel, Field
 from pydantic.fields import FieldInfo
 from typing_extensions import TypeAliasType
 
+from pydantic_surql.types.utils import SurQLType
+
 from .permissions import SurQLPermissions
-
-"""
-    A custom type to define a nullable field
-"""
-SurQLNullable =  Type[None]
-
-"""
-    A custom type to define a generic record
-"""
-SurQLAnyRecord = Type[dict]
-
-class SurQLType(Enum):
-    """
-        SurQL types enumeration
-    """
-    STRING = "string"
-    NUMBER = "number"
-    DATE = "datetime"
-    ANY = "any"
-    BOOLEAN = "bool"
-    ENUM = "enum"
-    ARRAY = "array"
-    OBJECT = "object"
-    SET = "set"
-    RECORD = "record<%s>"
-    ANY_RECORD = "record()"
-    OPTIONAL = "option<%s>"
-    NULL = "null"
 
 BASIC_TYPES: list[SurQLType] = [
     SurQLType.STRING,
@@ -84,7 +58,7 @@ class SurQLField(BaseModel):
         ] if e != None) + ";"
 
     @classmethod
-    def _surqlFromTypes(cls, table_name: str, field_name: str, types: List[Type], perms: Optional[SurQLPermissions] = None) -> list[str]:
+    def _surqlFromTypes(cls, table_name: str, field_name: str, types: list[Type], perms: Optional[SurQLPermissions] = None) -> list[str]:
         """
             return SDLS fields definitions recursively
             TODO: remove duplicates (eg: when a field is defined as int | float)
@@ -129,7 +103,7 @@ class SurQLField(BaseModel):
         return [cls._f_string(field_name, table_name, "|".join(res), isFlexible, assertions, perms)] + nextFields
 
 
-    def SDL(self, table_name: str) -> List[str]:
+    def SDL(self, table_name: str) -> list[str]:
         """return a SDL field definition"""
         fieldTypes = SurQLField._surqlFromTypes(table_name, self.name, self.types, self.perms)
         return "\n".join(fieldTypes)

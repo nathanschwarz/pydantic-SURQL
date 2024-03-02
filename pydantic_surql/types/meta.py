@@ -1,41 +1,33 @@
+from __future__ import annotations
 from datetime import datetime
 from enum import Enum
-from types import GenericAlias, NoneType, UnionType
-from typing import Any, Optional, Type, Union, get_args, get_origin
-from pydantic import BaseModel, field_validator
+from types import GenericAlias, NoneType
+from typing import Any, Optional, Type, get_args
+from pydantic import BaseModel, field_validator, field_serializer
 
-from pydantic_surql.types.field import SurQLAnyRecord, SurQLFieldInfo, SurQLNullable, SurQLType
+from pydantic_surql.types.utils import SurQLAnyRecord, SurQLNullable, is_union
+from pydantic_surql.types.field import SurQLFieldInfo, SurQLType
 from pydantic_surql.types.permissions import SurQLPermissions
 
 class BaseType(BaseModel):
     __is_surql_collection__: bool
     __surql_table_name__: str
 
-def is_union(annotation: Type) -> bool:
-    """
-        Check if a type is a Union
-    """
-    origin = get_origin(annotation)
-    return (origin == Union or origin == UnionType)
-
 class Schema(BaseModel):
     """
         A simple schema definition
     """
-    fields: list['SchemaField']
+    fields: list[SchemaField]
 
     @staticmethod
-    def from_pydantic_model(model: BaseType, name: str | None = None) -> 'Schema':
+    def from_pydantic_model(model: BaseType, name: str | None = None) -> Schema:
         """
             Create a schema from a pydantic model
         """
         fields = []
         for field_name, field in model.model_fields.items():
             fieldName = name + '.' + field_name if name is not None else field_name
-            _field = SchemaField(
-                name=fieldName,
-                type=SurQLType.from_pydantic_type(field.type_)
-            )
+            _field = SchemaField.from_type(fieldName, field.annotation)
             fields.append(_field)
         return Schema(fields=fields)
 
@@ -43,6 +35,13 @@ class Schema(BaseModel):
 class MetaType(BaseModel):
     type: SurQLType
     original: Type
+
+    @field_serializer('original')
+    def serialize_orignal(self, value: Type) -> str:
+        """
+            Serialize the original type
+        """
+        return value.__name__
 
     @property
     def flexible(self) -> bool:
@@ -94,8 +93,6 @@ class MetaType(BaseModel):
             return SurQLType.ARRAY
         if (isinstance(type, GenericAlias) and type.__origin__ == set):
             return SurQLType.SET
-        if issubclass(type, Enum):
-            return SurQLType.ENUM
         if (type == str):
             return SurQLType.STRING
         if (type == int or type == float):
@@ -112,21 +109,30 @@ class MetaType(BaseModel):
             return SurQLType.OPTIONAL
         if (type == SurQLAnyRecord):
             return SurQLType.ANY_RECORD
-        if (type == BaseModel):
+
+        if issubclass(type, Enum):
+            return SurQLType.ENUM
+        if (issubclass(type, BaseModel)):
             isCollection = hasattr(type, '__is_surql_collection__') and type.__is_surql_collection__
             if (isCollection):
                 return SurQLType.RECORD
             return SurQLType.OBJECT
         raise ValueError(f"Type {type} is not supported")
 
-    def from_type(self, originalType: Type) -> 'MetaType':
+    @staticmethod
+    def from_type(originalType: Type) -> MetaType:
         """
             Create a schema field meta from a type
         """
-        type = MetaType.__get_type(originalType)
+        _type = MetaType.__get_type(originalType)
+        _original = originalType
+        if (_type == SurQLType.ARRAY):
+            _original = list
+        elif (_type == SurQLType.SET):
+            _original = set
         return MetaType(
-            type=type,
-            original=originalType,
+            type=_type,
+            original=_original,
         )
 
 class SchemaField(BaseModel):
@@ -135,7 +141,7 @@ class SchemaField(BaseModel):
     """
     name: str
     meta: list[MetaType]
-    schema: Schema | 'SchemaField' | None = None
+    schema: Schema | SchemaField | None = None
 
     @field_validator('meta')
     @classmethod
@@ -148,21 +154,24 @@ class SchemaField(BaseModel):
         return v
 
     @staticmethod
-    def from_type(name: str, type: Type) -> 'SchemaField':
+    def from_type(name: str, type: Type) -> SchemaField:
         """
             Create a schema field from a type
         """
         meta = []
+        schema = None
         if (is_union(type)):
             types = get_args(type)
-            meta = [MetaType().from_type(t) for t in types]
+            meta: list[MetaType] = [MetaType.from_type(t) for t in types]
         else:
-            meta = [MetaType().from_type(type)]
+            meta: list[MetaType] = [MetaType.from_type(type)]
         meta_wd = next((x for x in meta if x.hasDefinition), None)
         if (meta_wd is not None):
             if (meta_wd.type == SurQLType.OBJECT):
                 schema = Schema.from_pydantic_model(type, name)
             else:
-                subType = get_args(type)
-                schema = SchemaField.from_type(f"{name}.*", type)
+                subType = get_args(type)[0]
+                schema = SchemaField.from_type(f"{name}.*", subType)
         return SchemaField(name=name, meta=meta, schema=schema)
+
+SchemaField.model_rebuild()

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pydantic-surql"
-version = "1.0.2"
+version = "1.0.3"
 description = "Pydantic Surql is a utility set to automatically convert Pydantic models to SURQL SDL definitions."
 authors = ["Nathan Schwarz <nathan.schwarz.pro@gmail.com>"]
 readme = "README.md"
@@ -14,6 +14,9 @@ pydantic = "^2.5.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.4"
+
+[tool.poetry.scripts]
+debug = "pydantic_surql.debug:main"
 
 [build-system]
 requires = ["poetry-core"]
