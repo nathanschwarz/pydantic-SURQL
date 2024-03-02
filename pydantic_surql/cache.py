@@ -1,7 +1,6 @@
-from typing import TypedDict, Type
-from .types import RecursiveType, SurQLField
+from typing import Type
 
-class Cache():
+class Cache[T]:
     """
         A simple cache system maping a Type to a list[RecursiveType]
     """
@@ -9,7 +8,7 @@ class Cache():
         """
             Initialize the cache
         """
-        self.cache: TypedDict[Type, RecursiveType | SurQLField] = {}
+        self.cache: dict[Type, T] = {}
 
     def get(self, key: Type):
         """
@@ -17,7 +16,7 @@ class Cache():
         """
         return self.cache.get(key)
 
-    def set(self, key: Type, value: TypedDict):
+    def set(self, key: Type, value: T):
         """
             Set a key in the cache
         """

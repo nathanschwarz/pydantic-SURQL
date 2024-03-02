@@ -1,6 +1,6 @@
 from typing import Type
 from pydantic import BaseModel
-from pydantic_surql.types.meta import BaseType, Schema, T_BaseType
+from pydantic_surql.types.meta import BaseType, Schema, SchemaField
 
 from .cache import Cache
 from .types import SurQLTableConfig
@@ -10,7 +10,7 @@ class SurQLParser:
         A pydantic SurQL parser
     """
     def __init__(self):
-        self.cache = Cache()
+        self.cache = Cache[Schema | SchemaField]()
 
     # @staticmethod
     # def to_simple_type(_type: Type) -> SurQLType | None:
@@ -137,17 +137,21 @@ class SurQLParser:
     #             fields.append(_field)
     #     return fields
 
-    def __rewriteClass(self, model: Type, name: str):
+    def __rewriteClass(self, model: Type, name: str, config: SurQLTableConfig):
         """
-            Rewrite the class to add the surql_table_name and is_surql_collection attributes
+            Rewrite the class to add the new attributes
         """
+        schema = Schema.from_pydantic_model(model, name, self.cache)
         class DecoratedModel(BaseType, model):
+            __name__ = model.__name__
             __is_surql_collection__ = True
             __surql_table_name__ = name
-            __surql_schema__ = Schema.from_pydantic_model(model, name)
+            __surql_schema__ = schema
+            __surql_config__ = config
         DecoratedModel.__name__ = model.__name__
         DecoratedModel.__qualname__ = model.__qualname__
         DecoratedModel.__module__ = model.__module__
+        self.cache.set(DecoratedModel, schema)
         return DecoratedModel
 
     def from_model(self, name: str, model: BaseModel, config: SurQLTableConfig = SurQLTableConfig()):
@@ -160,5 +164,4 @@ class SurQLParser:
             config.strict = False
         elif config.strict == False:
             model.model_config['extra'] = 'allow'
-        return self.__rewriteClass(model, name)
-        #return SurQLTable(name=name, fields=self.from_fields(model), config=config)
+        return self.__rewriteClass(model, name, config)
