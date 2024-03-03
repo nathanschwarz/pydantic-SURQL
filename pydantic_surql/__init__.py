@@ -1,11 +1,11 @@
 from typing import overload
 from pydantic import BaseModel
+
 from .parser import SurQLParser
-from .types import SurQLTableConfig
-#SurQLMetadata
+from .types import SurQLTableConfig, SurQLMetadata, SurQLTable
 
 Parser = SurQLParser()
-#Metadata = SurQLMetadata()
+Metadata = SurQLMetadata()
 
 @overload
 def surql_collection(name: str, config: dict = {}):
@@ -18,11 +18,7 @@ def surql_collection(name: str, config: SurQLTableConfig = SurQLTableConfig()):
     """
     def inner(model: BaseModel):
         schema = Parser.from_model(name, model, config)
-        # Metadata.tables += [table]
-        # for index in table.config.indexes:
-        #     if hasattr(index, "analyzer") and index.analyzer is not None:
-        #         exist = any([a.name == index.analyzer.name for a in Metadata.analyzers])
-        #         if not exist:
-        #             Metadata.analyzers += [index.analyzer]
+        table = SurQLTable(model=schema)
+        Metadata.tables.append(table)
         return schema
     return inner

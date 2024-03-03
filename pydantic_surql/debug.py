@@ -1,7 +1,6 @@
 from pydantic import BaseModel
-
 from pydantic_surql import surql_collection
-
+from .types.table import SurQLTable
 
 class Person(BaseModel):
     firstname: str
@@ -27,6 +26,6 @@ class Book(BaseModel):
 
 def main():
     print("debuging pydantic_surql")
-    print(Library.__surql_schema__.model_dump_json(indent=2))
-    print(Book.__surql_schema__.model_dump_json(indent=2))
+    print(SurQLTable(model=Library).sdl)
+    print(SurQLTable(model=Book).sdl)
     print("debug done")

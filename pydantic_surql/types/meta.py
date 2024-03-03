@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import Enum
 from types import GenericAlias, NoneType
 from typing import Any, Optional, Type, get_args
-from pydantic import BaseModel, field_validator, field_serializer
+from pydantic import BaseModel, Field, field_serializer
 from pydantic_surql.cache import Cache
 from pydantic_surql.types.config import SurQLTableConfig
 
@@ -38,6 +38,13 @@ class Schema(BaseModel):
         schema = Schema(fields=fields)
         cache.set(model, schema)
         return schema
+
+    @property
+    def sdl(self) -> str:
+        """
+            Get the SDL representation of the schema
+        """
+        return "\n".join([field.sdl for field in self.fields])
 
 
 class MetaType(BaseModel):
@@ -153,37 +160,55 @@ class SchemaField(BaseModel):
         A simple schema field definition
     """
     name: str
-    meta: list[MetaType]
-    definition: Schema | SchemaField | None = None
-
-    @field_validator('meta')
-    @classmethod
-    def meta_validator(cls, v: list[MetaType]):
-        """
-            validate meta
-        """
-        assert len(v) > 0, "meta must have at least one type"
-        assert [v.hasDefinition for v in v].count(True) <= 1, "a field can only have one sub-definition, please use separate fields"
-        return v
+    metas: list[MetaType] = Field(min_length=1)
+    definitions: list[Schema | SchemaField] = []
 
     @staticmethod
     def from_type(name: str, type: Type, cache: Cache) -> SchemaField:
         """
             Create a schema field from a type
         """
-        meta = []
-        definition = None
+        metas: list[MetaType] = []
+        definitions = []
         if (is_union(type)):
             types = get_args(type)
-            meta: list[MetaType] = [MetaType.from_type(t) for t in types]
+            metas = [MetaType.from_type(t) for t in types]
         else:
-            meta: list[MetaType] = [MetaType.from_type(type)]
-        meta_wd = next((x for x in meta if x.hasDefinition), None)
-        if (meta_wd is not None):
-            if (meta_wd.type == SurQLType.OBJECT):
-                definition = Schema.from_pydantic_model(type, name, cache)
+            metas = [MetaType.from_type(type)]
+        for meta in metas:
+            if (meta.hasDefinition):
+                if (meta.type == SurQLType.OBJECT):
+                    definitions.append(Schema.from_pydantic_model(type, name, cache))
+                else:
+                    # is a list or set
+                    definitions.append(SchemaField.from_type(f"{name}.*", meta.subType, cache))
+        return SchemaField(name=name, metas=metas, definitions=definitions)
+
+    @property
+    def sdl(self) -> str:
+        """
+            Get the SDL representation of the schema field
+        """
+        _split = self.name.split('.')
+        table_name = _split[0]
+        field_path = ".".join(_split[1:])
+        tokens: list[str] = [f"DEFINE FIELD {field_path} ON TABLE {table_name}"]
+        isFlexible = any([m.flexible for m in self.metas])
+        tokens.append("FLEXIBLE TYPE" if isFlexible else "TYPE")
+        isOptional = False
+        types: list[str] = []
+        for meta in self.metas:
+            if (meta.type == SurQLType.OPTIONAL):
+                isOptional = True
+            elif (meta.type == SurQLType.RECORD):
+                types.append(meta.type.value % meta.recordLink)
             else:
-                definition = SchemaField.from_type(f"{name}.*", meta_wd.subType, cache)
-        return SchemaField(name=name, meta=meta, definition=definition)
+                types.append(meta.type.value)
+        typesToken = " | ".join(types)
+        if (isOptional):
+            typesToken = SurQLType.OPTIONAL.value % typesToken
+        tokens.append(typesToken)
+        fieldSDL =  " ".join(tokens) + ";"
+        return "\n".join([fieldSDL] + [d.sdl for d in self.definitions])
 
 SchemaField.model_rebuild()
