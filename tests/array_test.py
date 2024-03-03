@@ -1,33 +1,48 @@
 from datetime import datetime
-from typing import Any, Optional, Type
+from typing import Any, Optional, Type, get_args
 
 from pydantic_surql.parser import SurQLParser
-from pydantic_surql.types import SurQLField, SurQLNullable, SurQLAnyRecord, SurQLType
+from pydantic_surql.types import SchemaField
+from pydantic_surql.types import SurQLNullable, SurQLAnyRecord, SurQLType
+from pydantic_surql.types.utils import is_union
 
 Parser = SurQLParser()
 F_NAME = "test"
 T_NAME = "test_table"
 
 class TestSimpleArrayFields:
-    def simple_field_check(self, field: SurQLField, types: list[SurQLType], optional: bool = False):
+    def tree_check(self, field: SchemaField, types: list[SurQLType], inherantType: SurQLType, optional: bool = False):
         """
             common test for type parsing
         """
-        if (optional):
-            assert field.types == [*types, SurQLType.OPTIONAL]
-        else:
-            assert field.types == types
         assert field.name is F_NAME
-        assert field.recordLink is None
+        if (optional):
+            assert field.isOptional, f"error optional mismatch expecting {optional} got {field.isOptional}"
+            assert len(field.metas) == 2, f"error optional field should have only one type got {len(field.metas)}"
+            for t in [meta.type for meta in field.metas]:
+                assert t in [SurQLType.ARRAY, SurQLType.OPTIONAL], f"error expecting array or optional got {t}"
+        else:
+            assert len(field.metas) == 1, f"error field should have only one type got {len(field.metas)}"
+            assert not field.isOptional, f"error optional mismatch expecting {optional} got {field.isOptional}"
+            assert field.metas[0].type == SurQLType.ARRAY, f"error expecting array got {field.metas[0].type}"
+        for i, meta in enumerate(field.metas):
+            assert meta.type == types[i], f"error type mismatch expecting {types[i]} got {meta.type}"
+            if (meta.hasDefinition):
+                definition = field.definitions[i]
+                assert definition.name == f"{F_NAME}.*", f"error definition name mismatch expecting {F_NAME}.* got {definition.name}"
+                assert definition.metas[0].type == inherantType, f"error definition type mismatch expecting {inherantType} got {definition.metas[0].type}"
+            else:
+                assert field.definitions[i] == None, f"error definition should be None got {field.definitions[i]}"
+
 
     def common_check(self, _type: Type, surql_type: SurQLType, optional: bool = False):
         """
             common test for array<type> type parsing and SDL generation
         """
         __type = Optional[list[_type]] if optional else list[_type]
-        field = Parser.from_field(F_NAME, __type)
-        self.simple_field_check(field, [[surql_type]], optional)
-        assert field.SDL(T_NAME) == "\n".join([
+        field = SchemaField.from_type(F_NAME, __type, Parser.cache)
+        self.tree_check(field, [[surql_type]], surql_type, optional)
+        assert field.sdl == "\n".join([
             "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "option<array>" if optional else "array"),
             "DEFINE FIELD %s.* ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, surql_type.value)
         ])

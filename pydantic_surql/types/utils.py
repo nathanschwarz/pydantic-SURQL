@@ -1,7 +1,6 @@
-from ctypes import Union
 from enum import Enum
 from types import UnionType
-from typing import Type, get_origin
+from typing import Type, get_origin, Union
 
 SurQLNullable = Type[None]
 """

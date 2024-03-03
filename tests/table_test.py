@@ -59,7 +59,8 @@ def test_table_view():
     name = "test_table"
     view_name = "test_view"
     #mandatory to mark the child table object as a collection internally
-    table = Parser.from_model(view_name, TableModel, config=SurQLTableConfig(asView=SurQLView(select=["name", "age"], from_t=[name], where=["age > 18"], group_by=["name"])))
+    view = SurQLView(select=["name", "age"], from_t=[name], where=["age > 18"], group_by=["name"])
+    table = Parser.from_model(view_name, TableModel, config=SurQLTableConfig(asView=view))
     assert table.name == view_name
     assert table._table_def() == "DEFINE TABLE %s AS SELECT name,age FROM %s WHERE age > 18 GROUP BY name;" % (view_name, name)
 

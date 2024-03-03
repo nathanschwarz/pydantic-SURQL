@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import Enum
 from types import GenericAlias, NoneType
 from typing import Any, Optional, Type, get_args
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, ConfigDict, Field, field_serializer
 from pydantic_surql.cache import Cache
 from pydantic_surql.types.config import SurQLTableConfig
 
@@ -28,8 +28,8 @@ class Schema(BaseModel):
         """
             Create a schema from a pydantic model
         """
-        if (cache.has(model)):
-            return cache.get(model)
+        # if (cache.has(model)):
+        #     return cache.get(model)
         fields = []
         for field_name, field in model.model_fields.items():
             fieldName = name + '.' + field_name if name is not None else field_name
@@ -48,9 +48,10 @@ class Schema(BaseModel):
 
 
 class MetaType(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     type: SurQLType
-    original: Type
-    subType: Type | None = None
+    original: Type | GenericAlias | Optional[Any]
+    subType: Type | GenericAlias | Optional[Any] | None = None
 
     @field_serializer('original', 'subType')
     def serialize_orignal(self, value: Type | None) -> str | None:
@@ -66,7 +67,10 @@ class MetaType(BaseModel):
         """
             Check if the field is flexible
         """
-        return self.type is SurQLType.OBJECT and self.original.model_config.get('extra') == 'allow'
+        return self.type is SurQLType.OBJECT and (
+            self.original == dict
+            or self.original.model_config.get('extra') == 'allow'
+        )
 
     @property
     def recordLink(self) -> str | None:
@@ -131,7 +135,7 @@ class MetaType(BaseModel):
             return SurQLType.ENUM
         if issubclass(type, BaseType):
             return SurQLType.RECORD
-        if (issubclass(type, BaseModel)):
+        if (issubclass(type, BaseModel) or type == dict):
             return SurQLType.OBJECT
         raise ValueError(f"Type {type} is not supported")
 
@@ -141,17 +145,14 @@ class MetaType(BaseModel):
             Create a schema field meta from a type
         """
         _type = MetaType.__get_type(originalType)
-        _original = originalType
         subType = None
         if (_type == SurQLType.ARRAY):
-            _original = list
             subType = get_args(originalType)[0]
         elif (_type == SurQLType.SET):
-            _original = set
             subType = get_args(originalType)[0]
         return MetaType(
             type=_type,
-            original=_original,
+            original=originalType,
             subType=subType
         )
 
@@ -178,11 +179,28 @@ class SchemaField(BaseModel):
         for meta in metas:
             if (meta.hasDefinition):
                 if (meta.type == SurQLType.OBJECT):
+                    # if (cache.has(type)):
+                    #     definitions.append(cache.get(type))
+                    # else:
                     definitions.append(Schema.from_pydantic_model(type, name, cache))
                 else:
                     # is a list or set
                     definitions.append(SchemaField.from_type(f"{name}.*", meta.subType, cache))
         return SchemaField(name=name, metas=metas, definitions=definitions)
+
+    @property
+    def isOptional(self) -> bool:
+        """
+            Check if the field is optional
+        """
+        return any([m.type == SurQLType.OPTIONAL for m in self.metas])
+
+    @property
+    def types(self) -> list[SurQLType]:
+        """
+            Get the type of the field
+        """
+        return [m.type for m in self.metas]
 
     @property
     def sdl(self) -> str:

@@ -12,7 +12,7 @@ class SurQLParser:
     def __init__(self):
         self.cache = Cache[Schema | SchemaField]()
 
-    def __rewriteClass(self, model: Type, name: str, config: SurQLTableConfig):
+    def __rewriteClass(self, model: Type, name: str, config: SurQLTableConfig) -> Type[BaseType]:
         """
             Rewrite the class to add the new attributes
         """

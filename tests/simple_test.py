@@ -1,12 +1,15 @@
 from enum import Enum
 from datetime import datetime
 from typing import Any, Optional
+
+from pydantic import BaseModel
 from pydantic_surql.parser import SurQLParser
-from pydantic_surql.types import SurQLNullable, SurQLAnyRecord, SurQLType, SurQLField
+from pydantic_surql.types import SurQLNullable, SurQLAnyRecord
+from pydantic_surql.types.meta import Schema
+from pydantic_surql.types.utils import SurQLType
+from .base import Base
 
 Parser = SurQLParser()
-F_NAME = "test"
-T_NAME = "test_table"
 
 class EnumData(Enum):
     """
@@ -19,112 +22,74 @@ class EnumData(Enum):
     E = 2
     F = 3
 
-class TestSimpleFields:
-    def simple_field_check(self, field: SurQLField, types: list[SurQLType], optional: bool = False):
-        """
-            common test for type parsing
-        """
-        if (optional):
-            assert field.types == [*types, SurQLType.OPTIONAL]
-        else:
-            assert field.types == types
-        assert field.name is F_NAME
-        assert field.recordLink is None
+class BasePerson(BaseModel):
+    """
+        Base person
+    """
+    name: str
+    age: int
+    weight: float
+    is_active: bool
+    birthday: datetime
+    nickname: Optional[str] = None
+    tags: list[str] | None
+    grades: list[float] | None
+    links: list[str | SurQLNullable] | None
 
-    def common_check(self, _type: type, surql_type: SurQLType, optional: bool = False):
-        """
-            common test for type parsing
-        """
-        __type = Optional[_type] if optional else _type
-        field = Parser.from_field(F_NAME, __type)
-        self.simple_field_check(field, [surql_type], optional)
-        assert field.SDL(T_NAME) == "\n".join([
-            "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, f"option<{surql_type.value}>" if optional else surql_type.value),
-        ])
+class SimpleTestObject(BasePerson):
+    """
+        Simple test object
+    """
+    classmates: list[BasePerson] | None
 
-    def test_str(self):
-        """
-            test string type parsing
-        """
-        self.common_check(str, SurQLType.STRING)
+class TestSimpleFields(Base):
+    def check_base_person(self, schema: Schema, path: str):
+        # check fields
 
-    def test_float(self):
-        """
-            test float type parsing
-        """
-        self.common_check(float, SurQLType.NUMBER)
+        # check name
+        self.check_field(f"{path}.name", schema.fields[0], [SurQLType.STRING])
 
-    def test_int(self):
-        """
-            test int type parsing
-        """
-        self.common_check(int, SurQLType.NUMBER)
+        # check age
+        self.check_field(f"{path}.age", schema.fields[1], [SurQLType.NUMBER])
 
-    def test_bool(self):
-        """
-            test bool type parsing
-        """
-        self.common_check(bool, SurQLType.BOOLEAN)
+        # check weight
+        self.check_field(f"{path}.weight", schema.fields[2], [SurQLType.NUMBER])
 
-    def test_date(self):
-        """
-            test date type parsing
-        """
-        self.common_check(datetime, SurQLType.DATE)
+        # check is_active
+        self.check_field(f"{path}.is_active", schema.fields[3], [SurQLType.BOOLEAN])
 
-    def test_nullable(self):
-        """
-            test nullable type parsing
-        """
-        self.common_check(SurQLNullable, SurQLType.NULL)
+        # check birthday
+        self.check_field(f"{path}.birthday", schema.fields[4], [SurQLType.DATE])
 
-    def test_optional(self):
-        """
-            test optional type parsing
-        """
-        self.common_check(str, SurQLType.STRING, True)
+        # check nickname
+        self.check_field(f"{path}.nickname", schema.fields[5], [SurQLType.STRING, SurQLType.OPTIONAL])
 
-    def test_optional_nullable(self):
-        """
-            test optional nullable type parsing
-        """
-        self.common_check(SurQLNullable, SurQLType.NULL, True)
+        # check tags
+        self.check_field(f"{path}.tags", schema.fields[6], [SurQLType.ARRAY, SurQLType.OPTIONAL])
+        self.check_field(f"{path}.tags.*", schema.fields[6].definitions[0], [SurQLType.STRING])
 
-    def test_any(self):
-        """
-            test any type parsing
-        """
-        self.common_check(Any, SurQLType.ANY)
+        # check grades
+        self.check_field(f"{path}.grades", schema.fields[7], [SurQLType.ARRAY, SurQLType.OPTIONAL])
+        self.check_field(f"{path}.grades.*", schema.fields[7].definitions[0], [SurQLType.NUMBER])
 
-    def test_any_record(self):
-        """
-            test SurQLAnyRecord type parsing
-        """
-        self.common_check(SurQLAnyRecord, SurQLType.ANY_RECORD)
+        # check links
+        self.check_field(f"{path}.links", schema.fields[8], [SurQLType.ARRAY, SurQLType.OPTIONAL])
+        self.check_field(f"{path}.links.*", schema.fields[8].definitions[0], [SurQLType.STRING, SurQLType.NULL])
 
-    def test_multi(self):
+    def test_simple(self):
         """
-            test multi type parsing
+            Test simple fields
         """
-        field = Parser.from_field(F_NAME, str | int | float | bool | datetime)
-        common_types = [SurQLType.STRING, SurQLType.NUMBER, SurQLType.NUMBER, SurQLType.BOOLEAN, SurQLType.DATE]
-        SDL_types = [SurQLType.STRING.value, SurQLType.NUMBER.value, SurQLType.NUMBER.value, SurQLType.BOOLEAN.value, SurQLType.DATE.value]
-        self.simple_field_check(field, common_types)
-        assert field.SDL(T_NAME) == "\n".join([
-            "DEFINE FIELD %s ON TABLE %s TYPE %s;" % (F_NAME, T_NAME, "|".join(SDL_types)),
-        ])
+        TABLE = "test_table"
+        model = Parser.from_model(TABLE, SimpleTestObject)
+        schema = model.__surql_schema__
+        assert model.__surql_table_name__ is TABLE, "table name mismatch expecting %s got %s" % (TABLE, model.__surql_table_name__)
+        assert len(schema.fields) == 10, f"error field count mismatch expecting 10 got {len(schema.fields)}"
 
-    def test_enum(self):
-        """
-            test enum type parsing
-        """
-        field = Parser.from_field(F_NAME, EnumData)
-        subDef = field.types[0]
-        assert field.name == F_NAME
-        assert field.recordLink is None
-        assert subDef.name is None
-        assert subDef.recordLink is None
-        assert subDef.types == [SurQLType.ENUM]
-        assert field.SDL(T_NAME) == "\n".join([
-            "DEFINE FIELD %s ON TABLE %s TYPE string|number ASSERT (%s);" % (F_NAME, T_NAME, subDef.assertion),
-        ])
+        # check base person
+        self.check_base_person(schema, TABLE)
+
+        # check classmates
+        self.check_field(f"{TABLE}.classmates", schema.fields[9], [SurQLType.ARRAY, SurQLType.OPTIONAL])
+        self.check_field(f"{TABLE}.classmates.*", schema.fields[9].definitions[0], [SurQLType.OBJECT])
+        self.check_base_person(schema.fields[9].definitions[0].definitions[0], f"{TABLE}.classmates.*")
