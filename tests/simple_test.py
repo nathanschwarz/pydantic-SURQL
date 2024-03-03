@@ -32,7 +32,7 @@ class BasePerson(BaseModel):
     is_active: bool
     birthday: datetime
     nickname: Optional[str] = None
-    tags: list[str] | None
+    tags: set[str] | None
     grades: list[float] | None
     links: list[str | SurQLNullable] | None
 
@@ -65,7 +65,7 @@ class TestSimpleFields(Base):
         self.check_field(f"{path}.nickname", schema.fields[5], [SurQLType.STRING, SurQLType.OPTIONAL])
 
         # check tags
-        self.check_field(f"{path}.tags", schema.fields[6], [SurQLType.ARRAY, SurQLType.OPTIONAL])
+        self.check_field(f"{path}.tags", schema.fields[6], [SurQLType.SET, SurQLType.OPTIONAL])
         self.check_field(f"{path}.tags.*", schema.fields[6].definitions[0], [SurQLType.STRING])
 
         # check grades
