@@ -1,8 +1,12 @@
-from pydantic_surql.types.meta import SchemaField
+from typing import Type
+from pydantic_surql.types.meta import BaseType, SchemaField
 from pydantic_surql.types.utils import SurQLType
 
 class Base:
     @staticmethod
+    def check_record(name: str, field: SchemaField, model: Type[BaseType]):
+        assert model.__surql_table_name__ == field.metas[0].recordLink, f"error record link mismatch expecting {model.__surql_table_name__} got {field.metas[0].recordLink} on {name}"
+
     def check_field(name: str, field: SchemaField, expectedTypes: list[SurQLType]):
         """
             common test for type parsing
