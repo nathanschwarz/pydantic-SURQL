@@ -255,11 +255,14 @@ class SchemaField(BaseModel):
     def sdl(self) -> str:
         """
             Get the SDL representation of the schema field
+            TODO: handle assertions
         """
         tokens: list[str] = [f"DEFINE FIELD {self.field_path} ON TABLE {self.table}"]
         tree = self.type_tree
         tokens.append("FLEXIBLE TYPE" if tree.isFlexible else "TYPE")
         tokens.append(tree.type())
+        if (self.perms is not None):
+            tokens.append("\n" + self.perms.SDL())
         fieldSDL =  " ".join(tokens) + ";"
         return "\n".join([fieldSDL] + [d.sdl for d in tree.definitions])
 

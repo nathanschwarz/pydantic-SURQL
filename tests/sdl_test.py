@@ -144,10 +144,11 @@ class TestSDL(Base):
     def test_enum(self, schema: Schema = model.__surql_schema__, path: str = TABLE):
         """
             Test enum field
+            TODO: check assertions when re-implemented
         """
         field = schema.fields[9]
         Base.check_field(f"{path}.group", field, [SurQLType.ENUM])
-        # todo check sdl
+        Base.check_field_sdl(field, f"DEFINE FIELD {field.field_path} ON TABLE {field.table} TYPE string|number;")
 
     def test_record(self, schema: Schema = model.__surql_schema__, path: str = TABLE):
         """
