@@ -45,6 +45,7 @@ class BasePerson(BaseModel):
     tags: set[str] | None
     grades: list[float] | None
     links: list[str | SurQLNullable] | None
+    group: EnumData
     known_addresses: list[Address] | None
 
 
@@ -87,10 +88,13 @@ class TestSimpleFields(Base):
         Base.check_field(f"{path}.links", schema.fields[8], [SurQLType.ARRAY, SurQLType.OPTIONAL])
         Base.check_field(f"{path}.links.*", schema.fields[8].definitions[0], [SurQLType.STRING, SurQLType.NULL])
 
+        # check group
+        Base.check_field(f"{path}.group", schema.fields[9], [SurQLType.ENUM])
+
         # check known_addresses
-        Base.check_field(f"{path}.known_addresses", schema.fields[9], [SurQLType.ARRAY, SurQLType.OPTIONAL])
-        Base.check_field(f"{path}.known_addresses.*", schema.fields[9].definitions[0], [SurQLType.RECORD])
-        Base.check_record(f"{path}.known_addresses.*", schema.fields[9].definitions[0], Address)
+        Base.check_field(f"{path}.known_addresses", schema.fields[10], [SurQLType.ARRAY, SurQLType.OPTIONAL])
+        Base.check_field(f"{path}.known_addresses.*", schema.fields[10].definitions[0], [SurQLType.RECORD])
+        Base.check_record(f"{path}.known_addresses.*", schema.fields[10].definitions[0], Address)
 
     def test_simple(self):
         """
@@ -100,13 +104,13 @@ class TestSimpleFields(Base):
         model = Parser.from_model(TABLE, SimpleTestObject)
         schema = model.__surql_schema__
         assert model.__surql_table_name__ is TABLE, "table name mismatch expecting %s got %s" % (TABLE, model.__surql_table_name__)
-        assert len(schema.fields) == 11, f"error field count mismatch expecting 11 got {len(schema.fields)}"
+        assert len(schema.fields) == 12, f"error field count mismatch expecting 12 got {len(schema.fields)}"
 
 
         # check base person
         self.check_base_person(schema, TABLE)
 
         # check classmates
-        Base.check_field(f"{TABLE}.classmates", schema.fields[10], [SurQLType.ARRAY, SurQLType.OPTIONAL])
-        Base.check_field(f"{TABLE}.classmates.*", schema.fields[10].definitions[0], [SurQLType.OBJECT])
-        self.check_base_person(schema.fields[10].definitions[0].definitions[0], f"{TABLE}.classmates.*")
+        Base.check_field(f"{TABLE}.classmates", schema.fields[11], [SurQLType.ARRAY, SurQLType.OPTIONAL])
+        Base.check_field(f"{TABLE}.classmates.*", schema.fields[11].definitions[0], [SurQLType.OBJECT])
+        self.check_base_person(schema.fields[11].definitions[0].definitions[0], f"{TABLE}.classmates.*")
