@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Optional
 from pydantic_surql import SurQLParser
 from pydantic_surql.types import SurQLNullable, SurQLTableConfig, SurQLView
@@ -12,7 +11,6 @@ class TableModel(BaseModel):
     age: int
     score: float | SurQLNullable
     is_active: bool
-    birthday: datetime
     nickname: Optional[str] = None
 
 class SchemalessTable(TableModel):
