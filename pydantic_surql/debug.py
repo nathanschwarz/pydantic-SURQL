@@ -23,6 +23,7 @@ class Book(BaseModel):
     tags: list[str] | None
     bought_by: list[Person] | None
     libraries: list[Library] | None
+    groups: list[list[str | int]]
 
 def main():
     print("debuging pydantic_surql")
@@ -31,7 +32,7 @@ def main():
     #     print(field.type_tree)
     #print(lib.sdl)
     book = SurQLTable(model=Book)
-    for field in book.model.__surql_schema__.fields:
-        print(field.type_tree)
-    #print(book.sdl)
+    #for field in book.model.__surql_schema__.fields:
+        #print(field.type_tree)
+    print(book.sdl)
     print("debug done")

@@ -238,7 +238,7 @@ class SchemaField(BaseModel):
             elif (meta.type == SurQLType.OBJECT):
                 isFlexible = meta.flexible
                 types.append(meta.type.value)
-                definitions.extend(self.definitions[idx])
+                definitions.append(self.definitions[idx])
             else:
                 types.append(meta.type.value)
         type_str = "|".join(types)
@@ -252,23 +252,10 @@ class SchemaField(BaseModel):
             Get the SDL representation of the schema field
         """
         tokens: list[str] = [f"DEFINE FIELD {self.field_path} ON TABLE {self.table}"]
-        isFlexible = any([m.flexible for m in self.metas])
+        (typesToken, subDefinitions, isFlexible) = self.type_tree
         tokens.append("FLEXIBLE TYPE" if isFlexible else "TYPE")
-        isOptional = False
-        subDefinitions = []
-        types: list[str] = []
-        for meta in self.metas:
-            if (meta.type == SurQLType.OPTIONAL):
-                isOptional = True
-            elif (meta.type == SurQLType.RECORD):
-                types.append(meta.type.value % meta.recordLink)
-            else:
-                types.append(meta.type.value)
-        typesToken = "|".join(types)
-        if (isOptional):
-            typesToken = SurQLType.OPTIONAL.value % typesToken
         tokens.append(typesToken)
         fieldSDL =  " ".join(tokens) + ";"
-        return "\n".join([fieldSDL] + [d.sdl for d in self.definitions])
+        return "\n".join([fieldSDL] + [d.sdl for d in subDefinitions])
 
 SchemaField.model_rebuild()
