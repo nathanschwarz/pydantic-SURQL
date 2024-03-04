@@ -77,13 +77,6 @@ class MetaType(BaseModel):
         return self.original.__surql_table_name__ if self.type is SurQLType.RECORD else None
 
     @computed_field
-    def perms(self) -> Optional[SurQLPermissions]:
-        """
-            Get the permissions
-        """
-        return self.original.perms if isinstance(self.original, SurQLFieldInfo) else None
-
-    @computed_field
     def assertions(self) -> Optional[str]:
         """
             Get the assertion
@@ -196,6 +189,13 @@ class SchemaField(BaseModel):
                     # is a list or set
                     definitions.append(SchemaField.from_type(f"{name}.*", meta.subType))
         return SchemaField(name=name, metas=metas, definitions=definitions)
+
+    @computed_field
+    def perms(self) -> Optional[SurQLPermissions]:
+        """
+            Get the permissions
+        """
+        return self.metas[0].original.perms if isinstance(self.metas[0].original, SurQLFieldInfo) else None
 
     @computed_field
     def isOptional(self) -> bool:

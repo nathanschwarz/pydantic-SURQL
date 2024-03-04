@@ -1,5 +1,5 @@
 from typing import Type
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, computed_field
 from pydantic_surql.types.meta import BaseType
 from .indexes import SurQLAnalyzer
 
@@ -10,7 +10,7 @@ class SurQLTable(BaseModel):
     """
     model: Type[BaseType]
 
-    @property
+    @computed_field
     def sdl(self) -> str:
         """
             Get the SDL representation of the model
@@ -35,7 +35,7 @@ class SurQLTable(BaseModel):
             sdl.append(event.SDL(self.model.__surql_table_name__))
         return "\n".join(sdl)
 
-    @property
+    @computed_field
     def analyzers(self) -> list[SurQLAnalyzer]:
         """
             Get the analyzers of the model
@@ -48,7 +48,7 @@ class SurQLMetadata(BaseModel):
     """
     tables: list[SurQLTable] = []
 
-    @property
+    @computed_field
     def analyzers(self) -> list[SurQLAnalyzer]:
         """
             Get the analyzers of the model
