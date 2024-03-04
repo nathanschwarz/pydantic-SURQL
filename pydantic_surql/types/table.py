@@ -34,7 +34,7 @@ class SurQLTable(BaseModel):
         """
             Get the SDL representation of the model
         """
-        sdl = [" ".join(self.definition) + ';', self.model.__surql_schema__.sdl]
+        sdl = [self.definition, self.model.__surql_schema__.sdl]
         for index in self.model.__surql_config__.indexes:
             sdl.append(index.SDL(self.model.__surql_table_name__))
         for event in self.model.__surql_config__.events:

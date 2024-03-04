@@ -2,7 +2,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import Enum
 from types import GenericAlias, NoneType
-from typing import Any, Optional, Type, get_args
+from typing import Any, ClassVar, Optional, Type, get_args
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, computed_field
 from pydantic_surql.cache import Cache
 from pydantic_surql.types.config import SurQLTableConfig
@@ -12,10 +12,10 @@ from pydantic_surql.types.field import SurQLFieldInfo, SurQLType
 from pydantic_surql.types.permissions import SurQLPermissions
 
 class BaseType(BaseModel):
-    __is_surql_collection__: bool
-    __surql_table_name__: str
-    __surql_schema__: Schema
-    __surql_config__: SurQLTableConfig
+    __is_surql_collection__: ClassVar[bool]
+    __surql_table_name__: ClassVar[str]
+    __surql_schema__: ClassVar[Schema]
+    __surql_config__: ClassVar[SurQLTableConfig]
 
 class Schema(BaseModel):
     """
