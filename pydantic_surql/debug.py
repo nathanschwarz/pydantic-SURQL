@@ -26,6 +26,12 @@ class Book(BaseModel):
 
 def main():
     print("debuging pydantic_surql")
-    print(SurQLTable(model=Library).sdl)
-    print(SurQLTable(model=Book).sdl)
+    # lib = SurQLTable(model=Library)
+    # for field in lib.model.__surql_schema__.fields:
+    #     print(field.type_tree)
+    #print(lib.sdl)
+    book = SurQLTable(model=Book)
+    for field in book.model.__surql_schema__.fields:
+        print(field.type_tree)
+    #print(book.sdl)
     print("debug done")

@@ -203,17 +203,59 @@ class SchemaField(BaseModel):
         return [m.type for m in self.metas]
 
     @property
+    def table(self) -> str:
+        """
+            Get the table name of the field
+        """
+        return self.name.split('.')[0]
+
+    @property
+    def field_path(self) -> str:
+        """
+            Get the field path
+        """
+        return self.name.replace(self.table + '.', '', 1)
+
+    @property
+    def type_tree(self) -> tuple[str, list[SchemaField], bool]:
+        """
+            Get the flat tree of the schema field
+        """
+        types: list[str] = []
+        definitions: list[SchemaField] = []
+        isOptional = False
+        isFlexible = False
+        for idx, meta in enumerate(self.metas):
+            if (meta.type == SurQLType.OPTIONAL):
+                isOptional = True
+            elif (meta.type == SurQLType.RECORD):
+                types.append(meta.type.value % meta.recordLink)
+            elif (meta.type == SurQLType.ARRAY or meta.type == SurQLType.SET):
+                (_types, _defs, _flex) = self.definitions[idx].type_tree
+                types.append(meta.type.value % _types)
+                definitions.extend(_defs)
+                isFlexible = isFlexible or _flex
+            elif (meta.type == SurQLType.OBJECT):
+                isFlexible = meta.flexible
+                types.append(meta.type.value)
+                definitions.extend(self.definitions[idx])
+            else:
+                types.append(meta.type.value)
+        type_str = "|".join(types)
+        if (isOptional):
+            return (SurQLType.OPTIONAL.value % type_str, definitions, isFlexible)
+        return (type_str, definitions, isFlexible)
+
+    @property
     def sdl(self) -> str:
         """
             Get the SDL representation of the schema field
         """
-        _split = self.name.split('.')
-        table_name = _split[0]
-        field_path = ".".join(_split[1:])
-        tokens: list[str] = [f"DEFINE FIELD {field_path} ON TABLE {table_name}"]
+        tokens: list[str] = [f"DEFINE FIELD {self.field_path} ON TABLE {self.table}"]
         isFlexible = any([m.flexible for m in self.metas])
         tokens.append("FLEXIBLE TYPE" if isFlexible else "TYPE")
         isOptional = False
+        subDefinitions = []
         types: list[str] = []
         for meta in self.metas:
             if (meta.type == SurQLType.OPTIONAL):
@@ -222,7 +264,7 @@ class SchemaField(BaseModel):
                 types.append(meta.type.value % meta.recordLink)
             else:
                 types.append(meta.type.value)
-        typesToken = " | ".join(types)
+        typesToken = "|".join(types)
         if (isOptional):
             typesToken = SurQLType.OPTIONAL.value % typesToken
         tokens.append(typesToken)

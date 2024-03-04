@@ -7,6 +7,7 @@ class Base:
     def check_record(name: str, field: SchemaField, model: Type[BaseType]):
         assert model.__surql_table_name__ == field.metas[0].recordLink, f"error record link mismatch expecting {model.__surql_table_name__} got {field.metas[0].recordLink} on {name}"
 
+    @staticmethod
     def check_field(name: str, field: SchemaField, expectedTypes: list[SurQLType]):
         """
             common test for type parsing
@@ -16,15 +17,9 @@ class Base:
         for i, type in enumerate(field.types):
             assert type == expectedTypes[i], f"error type mismatch expecting {expectedTypes[i]} got {type} on {field.name}"
 
-    def field(name: str, table: str, type: str, flexible: bool, optional: bool):
+    @staticmethod
+    def check_field_sdl(field: SchemaField, expected: str):
         """
-            Generate a field definition
+            common test for field sdl
         """
-        return "DEFINE FIELD %s ON TABLE %s %s %s%s%s;" % (
-            name,
-            table,
-            "FLEXIBLE TYPE" if flexible else "TYPE",
-            "option<" if optional else "",
-            type,
-            ">" if optional else "",
-        )
+        assert field.sdl == expected, f"error sdl mismatch expecting {expected} got {field.sdl} on {field.name}"
