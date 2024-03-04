@@ -3,7 +3,7 @@ from datetime import datetime
 from enum import Enum
 from types import GenericAlias, NoneType
 from typing import Any, Optional, Type, get_args
-from pydantic import BaseModel, ConfigDict, Field, field_serializer
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, computed_field
 from pydantic_surql.cache import Cache
 from pydantic_surql.types.config import SurQLTableConfig
 
@@ -36,7 +36,7 @@ class Schema(BaseModel):
         schema = Schema(fields=fields)
         return schema
 
-    @property
+    @computed_field
     def sdl(self) -> str:
         """
             Get the SDL representation of the schema
@@ -59,7 +59,7 @@ class MetaType(BaseModel):
             return None
         return value.__name__
 
-    @property
+    @computed_field
     def flexible(self) -> bool:
         """
             Check if the field is flexible
@@ -69,21 +69,21 @@ class MetaType(BaseModel):
             or self.original.model_config.get('extra') == 'allow'
         )
 
-    @property
+    @computed_field
     def recordLink(self) -> str | None:
         """
             Get the record link
         """
         return self.original.__surql_table_name__ if self.type is SurQLType.RECORD else None
 
-    @property
+    @computed_field
     def perms(self) -> Optional[SurQLPermissions]:
         """
             Get the permissions
         """
         return self.original.perms if isinstance(self.original, SurQLFieldInfo) else None
 
-    @property
+    @computed_field
     def assertions(self) -> Optional[str]:
         """
             Get the assertion
@@ -93,7 +93,7 @@ class MetaType(BaseModel):
             return f"$value in [{__assertions}]"
         return None
 
-    @property
+    @computed_field
     def hasDefinition(self) -> bool:
         """
             Check if the field has sub definitions
@@ -197,35 +197,35 @@ class SchemaField(BaseModel):
                     definitions.append(SchemaField.from_type(f"{name}.*", meta.subType))
         return SchemaField(name=name, metas=metas, definitions=definitions)
 
-    @property
+    @computed_field
     def isOptional(self) -> bool:
         """
             Check if the field is optional
         """
         return any([m.type == SurQLType.OPTIONAL for m in self.metas])
 
-    @property
+    @computed_field
     def types(self) -> list[SurQLType]:
         """
             Get the type of the field
         """
         return [m.type for m in self.metas]
 
-    @property
+    @computed_field
     def table(self) -> str:
         """
             Get the table name of the field
         """
         return self.name.split('.')[0]
 
-    @property
+    @computed_field
     def field_path(self) -> str:
         """
             Get the field path
         """
         return self.name.replace(self.table + '.', '', 1)
 
-    @property
+    @computed_field
     def type_tree(self) -> TypeTree:
         """
             Get the flat tree of the schema field
@@ -251,7 +251,7 @@ class SchemaField(BaseModel):
                 tree.types.append(meta.type.value)
         return tree
 
-    @property
+    @computed_field
     def sdl(self) -> str:
         """
             Get the SDL representation of the schema field
