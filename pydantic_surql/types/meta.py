@@ -24,19 +24,16 @@ class Schema(BaseModel):
     fields: list[SchemaField]
 
     @staticmethod
-    def from_pydantic_model(model: BaseType, name: str, cache: Cache) -> Schema:
+    def from_pydantic_model(model: BaseType, name: str) -> Schema:
         """
             Create a schema from a pydantic model
         """
-        # if (cache.has(model)):
-        #     return cache.get(model)
         fields = []
         for field_name, field in model.model_fields.items():
             fieldName = name + '.' + field_name if name is not None else field_name
-            _field = SchemaField.from_type(fieldName, field.annotation, cache)
+            _field = SchemaField.from_type(fieldName, field.annotation)
             fields.append(_field)
         schema = Schema(fields=fields)
-        cache.set(model, schema)
         return schema
 
     @property
@@ -180,7 +177,7 @@ class SchemaField(BaseModel):
     definitions: list[Schema | SchemaField] = []
 
     @staticmethod
-    def from_type(name: str, type: Type, cache: Cache) -> SchemaField:
+    def from_type(name: str, type: Type) -> SchemaField:
         """
             Create a schema field from a type
         """
@@ -194,13 +191,10 @@ class SchemaField(BaseModel):
         for meta in metas:
             if (meta.hasDefinition):
                 if (meta.type == SurQLType.OBJECT):
-                    # if (cache.has(type)):
-                    #     definitions.append(cache.get(type))
-                    # else:
-                    definitions.append(Schema.from_pydantic_model(type, name, cache))
+                    definitions.append(Schema.from_pydantic_model(type, name))
                 else:
                     # is a list or set
-                    definitions.append(SchemaField.from_type(f"{name}.*", meta.subType, cache))
+                    definitions.append(SchemaField.from_type(f"{name}.*", meta.subType))
         return SchemaField(name=name, metas=metas, definitions=definitions)
 
     @property

@@ -16,7 +16,7 @@ class SurQLParser:
         """
             Rewrite the class to add the new attributes
         """
-        schema = Schema.from_pydantic_model(model, name, self.cache)
+        schema = Schema.from_pydantic_model(model, name)
         cls = create_model(
             __model_name= model.__name__,
             __base__=(BaseType, model),
@@ -26,7 +26,6 @@ class SurQLParser:
             __surql_schema__ = schema,
             __surql_config__ = config,
         )
-        self.cache.set(cls, schema)
         return cls
 
     def from_model(self, name: str, model: BaseModel, config: SurQLTableConfig = SurQLTableConfig()):
