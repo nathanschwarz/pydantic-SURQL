@@ -156,6 +156,21 @@ class MetaType(BaseModel):
             subType=subType
         )
 
+class TypeTree(BaseModel):
+    types: list[str] = []
+    definitions: list[SchemaField] = []
+    isFlexible: bool = False
+    isOptional: bool = False
+
+    def type(self) -> str:
+        """
+            Get the SDL representation of the type tree
+        """
+        type_str = "|".join(self.types)
+        if (self.isOptional):
+            return (SurQLType.OPTIONAL.value % type_str)
+        return type_str
+
 class SchemaField(BaseModel):
     """
         A simple schema field definition
@@ -217,34 +232,30 @@ class SchemaField(BaseModel):
         return self.name.replace(self.table + '.', '', 1)
 
     @property
-    def type_tree(self) -> tuple[str, list[SchemaField], bool]:
+    def type_tree(self) -> TypeTree:
         """
             Get the flat tree of the schema field
         """
-        types: list[str] = []
-        definitions: list[SchemaField] = []
-        isOptional = False
-        isFlexible = False
+        tree = TypeTree()
         for idx, meta in enumerate(self.metas):
             if (meta.type == SurQLType.OPTIONAL):
-                isOptional = True
+                tree.isOptional = True
             elif (meta.type == SurQLType.RECORD):
-                types.append(meta.type.value % meta.recordLink)
+                tree.types.append(meta.type.value % meta.recordLink)
             elif (meta.type == SurQLType.ARRAY or meta.type == SurQLType.SET):
-                (_types, _defs, _flex) = self.definitions[idx].type_tree
-                types.append(meta.type.value % _types)
-                definitions.extend(_defs)
-                isFlexible = isFlexible or _flex
+                _tree = self.definitions[idx].type_tree
+                tree.types.append(meta.type.value % _tree.type())
+                tree.definitions.extend(_tree.definitions)
+                tree.isFlexible = tree.isFlexible or _tree.isFlexible
             elif (meta.type == SurQLType.OBJECT):
-                isFlexible = meta.flexible
-                types.append(meta.type.value)
-                definitions.append(self.definitions[idx])
+                tree.isFlexible = tree.isFlexible or meta.flexible
+                tree.types.append(meta.type.value)
+                tree.definitions.append(self.definitions[idx])
+            elif (meta.type == SurQLType.ENUM):
+                tree.types.extend([SurQLType.STRING.value, SurQLType.NUMBER.value])
             else:
-                types.append(meta.type.value)
-        type_str = "|".join(types)
-        if (isOptional):
-            return (SurQLType.OPTIONAL.value % type_str, definitions, isFlexible)
-        return (type_str, definitions, isFlexible)
+                tree.types.append(meta.type.value)
+        return tree
 
     @property
     def sdl(self) -> str:
@@ -252,10 +263,10 @@ class SchemaField(BaseModel):
             Get the SDL representation of the schema field
         """
         tokens: list[str] = [f"DEFINE FIELD {self.field_path} ON TABLE {self.table}"]
-        (typesToken, subDefinitions, isFlexible) = self.type_tree
-        tokens.append("FLEXIBLE TYPE" if isFlexible else "TYPE")
-        tokens.append(typesToken)
+        tree = self.type_tree
+        tokens.append("FLEXIBLE TYPE" if tree.isFlexible else "TYPE")
+        tokens.append(tree.type())
         fieldSDL =  " ".join(tokens) + ";"
-        return "\n".join([fieldSDL] + [d.sdl for d in subDefinitions])
+        return "\n".join([fieldSDL] + [d.sdl for d in tree.definitions])
 
 SchemaField.model_rebuild()
