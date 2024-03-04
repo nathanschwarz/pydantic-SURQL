@@ -47,7 +47,8 @@ class BasePerson(BaseModel):
     links: list[str | SurQLNullable] | None
     group: EnumData
     known_addresses: list[Address] | None
-
+    metadata: SurQLAnyRecord | None
+    extra: Any | None
 
 class SimpleTestObject(BasePerson):
     """
@@ -156,6 +157,23 @@ class TestSDL(Base):
         Base.check_field(f"{path}.known_addresses", field, [SurQLType.ARRAY, SurQLType.OPTIONAL])
         Base.check_field(f"{path}.known_addresses.*", field.definitions[0], [SurQLType.RECORD])
         Base.check_record(f"{path}.known_addresses.*", field.definitions[0], Address)
+        Base.check_field_sdl(field, f"DEFINE FIELD {field.field_path} ON TABLE {field.table} TYPE option<array<record<address>>>;")
+
+    def test_any_record(self, schema: Schema = model.__surql_schema__, path: str = TABLE):
+        """
+            Test any record field
+        """
+        field = schema.fields[11]
+        Base.check_field(f"{path}.metadata", field, [SurQLType.ANY_RECORD, SurQLType.OPTIONAL])
+        Base.check_field_sdl(field, f"DEFINE FIELD {field.field_path} ON TABLE {field.table} TYPE option<record()>;")
+
+    def test_any(self, schema: Schema = model.__surql_schema__, path: str = TABLE):
+        """
+            Test any field
+        """
+        field = schema.fields[12]
+        Base.check_field(f"{path}.extra", field, [SurQLType.ANY, SurQLType.OPTIONAL])
+        Base.check_field_sdl(field, f"DEFINE FIELD {field.field_path} ON TABLE {field.table} TYPE option<any>;")
 
     def check_base_person(self, schema: Schema, path: str):
         """
@@ -177,7 +195,7 @@ class TestSDL(Base):
         """
             Test object field
         """
-        field = schema.fields[11]
+        field = schema.fields[13]
         Base.check_field(f"{path}.classmates", field, [SurQLType.ARRAY, SurQLType.OPTIONAL])
         Base.check_field(f"{path}.classmates.*", field.definitions[0], [SurQLType.OBJECT])
         self.check_base_person(field.definitions[0].definitions[0], f"{path}.classmates.*")
@@ -188,4 +206,4 @@ class TestSDL(Base):
         """
         schema = model.__surql_schema__
         assert model.__surql_table_name__ is TABLE, "table name mismatch expecting %s got %s" % (TABLE, model.__surql_table_name__)
-        assert len(schema.fields) == 12, f"error field count mismatch expecting 12 got {len(schema.fields)}"
+        assert len(schema.fields) == 14, f"error field count mismatch expecting 14 got {len(schema.fields)}"
