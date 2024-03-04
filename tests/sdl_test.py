@@ -66,7 +66,7 @@ class TestSDL(Base):
             - schema tree generation
             - field sdl generation
     """
-    def test_str(self, schema: Schema = model.__surql_schema__, path: str = TABLE):
+    def test_str(self, schema: Schema = model.surql_schema, path: str = TABLE):
         """
             Test string field
         """
@@ -74,7 +74,7 @@ class TestSDL(Base):
         Base.check_field(f"{path}.name", field, [SurQLType.STRING])
         Base.check_field_sdl(field, f"DEFINE FIELD {field.field_path} ON TABLE {field.table} TYPE string;")
 
-    def test_int(self, schema: Schema = model.__surql_schema__, path: str = TABLE):
+    def test_int(self, schema: Schema = model.surql_schema, path: str = TABLE):
         """
             Test int field
         """
@@ -82,7 +82,7 @@ class TestSDL(Base):
         Base.check_field(f"{path}.age", field, [SurQLType.NUMBER])
         Base.check_field_sdl(field, f"DEFINE FIELD {field.field_path} ON TABLE {field.table} TYPE number;")
 
-    def test_float(self, schema: Schema = model.__surql_schema__, path: str = TABLE):
+    def test_float(self, schema: Schema = model.surql_schema, path: str = TABLE):
         """
             Test float field
         """
@@ -90,7 +90,7 @@ class TestSDL(Base):
         Base.check_field(f"{path}.weight", field, [SurQLType.NUMBER])
         Base.check_field_sdl(field, f"DEFINE FIELD {field.field_path} ON TABLE {field.table} TYPE number;")
 
-    def test_bool(self, schema: Schema = model.__surql_schema__, path: str = TABLE):
+    def test_bool(self, schema: Schema = model.surql_schema, path: str = TABLE):
         """
             Test bool field
         """
@@ -98,7 +98,7 @@ class TestSDL(Base):
         Base.check_field(f"{path}.is_active", field, [SurQLType.BOOLEAN])
         Base.check_field_sdl(field, f"DEFINE FIELD {field.field_path} ON TABLE {field.table} TYPE bool;")
 
-    def test_date(self, schema: Schema = model.__surql_schema__, path: str = TABLE):
+    def test_date(self, schema: Schema = model.surql_schema, path: str = TABLE):
         """
             Test date field
         """
@@ -106,7 +106,7 @@ class TestSDL(Base):
         Base.check_field(f"{path}.birthday", field, [SurQLType.DATE])
         Base.check_field_sdl(field, f"DEFINE FIELD {field.field_path} ON TABLE {field.table} TYPE datetime;")
 
-    def test_optional(self, schema: Schema = model.__surql_schema__, path: str = TABLE):
+    def test_optional(self, schema: Schema = model.surql_schema, path: str = TABLE):
         """
             Test optional field
         """
@@ -114,7 +114,7 @@ class TestSDL(Base):
         Base.check_field(f"{path}.nickname", field, [SurQLType.STRING, SurQLType.OPTIONAL])
         Base.check_field_sdl(field, f"DEFINE FIELD {field.field_path} ON TABLE {field.table} TYPE option<string>;")
 
-    def test_set(self, schema: Schema = model.__surql_schema__, path: str = TABLE):
+    def test_set(self, schema: Schema = model.surql_schema, path: str = TABLE):
         """
             Test set field
         """
@@ -123,7 +123,7 @@ class TestSDL(Base):
         Base.check_field(f"{path}.tags.*", field.definitions[0], [SurQLType.STRING])
         Base.check_field_sdl(field, f"DEFINE FIELD {field.field_path} ON TABLE {field.table} TYPE option<set<string>>;")
 
-    def test_array(self, schema: Schema = model.__surql_schema__, path: str = TABLE):
+    def test_array(self, schema: Schema = model.surql_schema, path: str = TABLE):
         """
             Test array field
         """
@@ -132,7 +132,7 @@ class TestSDL(Base):
         Base.check_field(f"{path}.grades.*", field.definitions[0], [SurQLType.NUMBER])
         Base.check_field_sdl(field, f"DEFINE FIELD {field.field_path} ON TABLE {field.table} TYPE option<array<number>>;")
 
-    def test_array_nullable(self, schema: Schema = model.__surql_schema__, path: str = TABLE):
+    def test_array_nullable(self, schema: Schema = model.surql_schema, path: str = TABLE):
         """
             Test array nullable field
         """
@@ -141,7 +141,7 @@ class TestSDL(Base):
         Base.check_field(f"{path}.links.*", field.definitions[0], [SurQLType.STRING, SurQLType.NULL])
         Base.check_field_sdl(field, f"DEFINE FIELD {field.field_path} ON TABLE {field.table} TYPE option<array<string|null>>;")
 
-    def test_enum(self, schema: Schema = model.__surql_schema__, path: str = TABLE):
+    def test_enum(self, schema: Schema = model.surql_schema, path: str = TABLE):
         """
             Test enum field
             TODO: check assertions when re-implemented
@@ -150,7 +150,7 @@ class TestSDL(Base):
         Base.check_field(f"{path}.group", field, [SurQLType.ENUM])
         Base.check_field_sdl(field, f"DEFINE FIELD {field.field_path} ON TABLE {field.table} TYPE string|number;")
 
-    def test_record(self, schema: Schema = model.__surql_schema__, path: str = TABLE):
+    def test_record(self, schema: Schema = model.surql_schema, path: str = TABLE):
         """
             Test record field
         """
@@ -160,7 +160,7 @@ class TestSDL(Base):
         Base.check_record(f"{path}.known_addresses.*", field.definitions[0], Address)
         Base.check_field_sdl(field, f"DEFINE FIELD {field.field_path} ON TABLE {field.table} TYPE option<array<record<address>>>;")
 
-    def test_any_record(self, schema: Schema = model.__surql_schema__, path: str = TABLE):
+    def test_any_record(self, schema: Schema = model.surql_schema, path: str = TABLE):
         """
             Test any record field
         """
@@ -168,7 +168,7 @@ class TestSDL(Base):
         Base.check_field(f"{path}.metadata", field, [SurQLType.ANY_RECORD, SurQLType.OPTIONAL])
         Base.check_field_sdl(field, f"DEFINE FIELD {field.field_path} ON TABLE {field.table} TYPE option<record()>;")
 
-    def test_any(self, schema: Schema = model.__surql_schema__, path: str = TABLE):
+    def test_any(self, schema: Schema = model.surql_schema, path: str = TABLE):
         """
             Test any field
         """
@@ -192,7 +192,7 @@ class TestSDL(Base):
         self.test_enum(schema, path)
         self.test_record(schema, path)
 
-    def test_object(self, schema: Schema = model.__surql_schema__, path: str = TABLE):
+    def test_object(self, schema: Schema = model.surql_schema, path: str = TABLE):
         """
             Test object field
         """
@@ -205,6 +205,6 @@ class TestSDL(Base):
         """
             Test simple fields
         """
-        schema = model.__surql_schema__
-        assert model.__surql_table_name__ is TABLE, "table name mismatch expecting %s got %s" % (TABLE, model.__surql_table_name__)
+        schema = model.surql_schema
+        assert model.surql_table_name is TABLE, "table name mismatch expecting %s got %s" % (TABLE, model.surql_table_name)
         assert len(schema.fields) == 14, f"error field count mismatch expecting 14 got {len(schema.fields)}"

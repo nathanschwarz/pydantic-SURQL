@@ -15,18 +15,18 @@ class SurQLTable(BaseModel):
         """
             Get the table definition
         """
-        _def = ["DEFINE TABLE", self.model.__surql_table_name__]
-        if (self.model.__surql_config__.asView is not None):
-            _def += [self.model.__surql_config__.asView.SDL()]
+        _def = ["DEFINE TABLE", self.model.surql_table_name]
+        if (self.model.surql_config.asView is not None):
+            _def += [self.model.surql_config.asView.SDL()]
         else:
             _def += [
-                "DROP" if self.model.__surql_config__.drop else None,
-                "SCHEMAFULL" if self.model.__surql_config__.strict else "SCHEMALESS",
-                f"CHANGEFEED {self.model.__surql_config__.changeFeed}" if self.model.__surql_config__.changeFeed is not None else None,
+                "DROP" if self.model.surql_config.drop else None,
+                "SCHEMAFULL" if self.model.surql_config.strict else "SCHEMALESS",
+                f"CHANGEFEED {self.model.surql_config.changeFeed}" if self.model.surql_config.changeFeed is not None else None,
             ]
             _def = [e for e in _def if e is not None]
-        if (self.model.__surql_config__.permissions is not None):
-            _def.append(self.model.__surql_config__.permissions.SDL())
+        if (self.model.surql_config.permissions is not None):
+            _def.append(self.model.surql_config.permissions.SDL())
         return " ".join(_def) + ";"
 
     @computed_field
@@ -34,11 +34,11 @@ class SurQLTable(BaseModel):
         """
             Get the SDL representation of the model
         """
-        sdl = [self.definition, self.model.__surql_schema__.sdl]
-        for index in self.model.__surql_config__.indexes:
-            sdl.append(index.SDL(self.model.__surql_table_name__))
-        for event in self.model.__surql_config__.events:
-            sdl.append(event.SDL(self.model.__surql_table_name__))
+        sdl = [self.definition, self.model.surql_schema.sdl]
+        for index in self.model.surql_config.indexes:
+            sdl.append(index.SDL(self.model.surql_table_name))
+        for event in self.model.surql_config.events:
+            sdl.append(event.SDL(self.model.surql_table_name))
         return "\n".join(sdl)
 
     @computed_field
@@ -46,7 +46,7 @@ class SurQLTable(BaseModel):
         """
             Get the analyzers of the model
         """
-        return [index.analyzer for index in self.model.__surql_config__.indexes if index.analyzer is not None]
+        return [index.analyzer for index in self.model.surql_config.indexes if index.analyzer is not None]
 
 class SurQLMetadata(BaseModel):
     """
@@ -68,7 +68,7 @@ class SurQLMetadata(BaseModel):
         """
             validate tables
         """
-        assert len(v) == len(set([table.model.__surql_table_name__ for table in v])), "tables names must be unique"
+        assert len(v) == len(set([table.model.surql_table_name for table in v])), "tables names must be unique"
         return v
 
     def clear(self):

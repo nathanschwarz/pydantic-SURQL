@@ -26,7 +26,7 @@ def test_strict_schemafull_table():
     #mandatory to mark the child table object as a collection inÒternally
     model = Parser.from_model(name, TableModel, SurQLTableConfig(strict=True))
     table = SurQLTable(model=model)
-    assert table.model.__surql_table_name__ == name
+    assert table.model.surql_table_name == name
     assert table.definition == "DEFINE TABLE %s SCHEMAFULL;" % name
 
 def test_strict_schemaless_table():
@@ -37,7 +37,7 @@ def test_strict_schemaless_table():
     #mandatory to mark the child table object as a collection internally
     model = Parser.from_model(name, TableModel, config=SurQLTableConfig(strict=False))
     table = SurQLTable(model=model)
-    assert table.model.__surql_table_name__ == name
+    assert table.model.surql_table_name == name
     assert table.model.model_config.get('extra') == "allow"
     assert table.definition == "DEFINE TABLE %s SCHEMALESS;" % name
 
@@ -52,9 +52,9 @@ def test_strict_schemaless_table_with_extra_allow():
     #mandatory to mark the child table object as a collection internally
     model = Parser.from_model(name, SchemalessTable)
     table = SurQLTable(model=model)
-    assert table.model.__surql_table_name__ == name
+    assert table.model.surql_table_name == name
     assert SchemalessTable.model_config.get('extra') == "allow"
-    assert table.model.__surql_config__.strict == False, "config.strict must be False"
+    assert table.model.surql_config.strict == False, "config.strict must be False"
     assert table.definition == "DEFINE TABLE %s SCHEMALESS;" % name
 
 def test_table_view():
@@ -67,7 +67,7 @@ def test_table_view():
     view = SurQLView(select=["name", "age"], from_t=[name], where=["age > 18"], group_by=["name"])
     model = Parser.from_model(view_name, TableModel, config=SurQLTableConfig(asView=view))
     table = SurQLTable(model=model)
-    assert table.model.__surql_table_name__ == view_name
+    assert table.model.surql_table_name == view_name
     assert table.definition == "DEFINE TABLE %s AS SELECT name,age FROM %s WHERE age > 18 GROUP BY name;" % (view_name, name)
 
 def test_table_drop():
@@ -78,7 +78,7 @@ def test_table_drop():
     #mandatory to mark the child table object as a collection internally
     model = Parser.from_model(name, TableModel, config=SurQLTableConfig(drop=True))
     table = SurQLTable(model=model)
-    assert table.model.__surql_table_name__ == name
+    assert table.model.surql_table_name == name
     assert table.definition == "DEFINE TABLE %s DROP SCHEMAFULL;" % name
 
 def test_table_change_feed():
@@ -90,6 +90,6 @@ def test_table_change_feed():
     #mandatory to mark the child table object as a collection internally
     model = Parser.from_model(name, TableModel, config=SurQLTableConfig(changeFeed=changeFeed))
     table = SurQLTable(model=model)
-    assert table.model.__surql_table_name__ == name
+    assert table.model.surql_table_name == name
     assert table.definition == "DEFINE TABLE %s SCHEMAFULL CHANGEFEED %s;" % (name, changeFeed)
 

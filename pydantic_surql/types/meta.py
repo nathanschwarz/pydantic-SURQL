@@ -12,10 +12,10 @@ from pydantic_surql.types.field import SurQLFieldInfo, SurQLType
 from pydantic_surql.types.permissions import SurQLPermissions
 
 class BaseType(BaseModel):
-    __is_surql_collection__: ClassVar[bool]
-    __surql_table_name__: ClassVar[str]
-    __surql_schema__: ClassVar[Schema]
-    __surql_config__: ClassVar[SurQLTableConfig]
+    is_surql_collection: ClassVar[bool]
+    surql_table_name: ClassVar[str]
+    surql_schema: ClassVar[Schema]
+    surql_config: ClassVar[SurQLTableConfig]
 
 class Schema(BaseModel):
     """
@@ -74,7 +74,7 @@ class MetaType(BaseModel):
         """
             Get the record link
         """
-        return self.original.__surql_table_name__ if self.type is SurQLType.RECORD else None
+        return self.original.surql_table_name if self.type is SurQLType.RECORD else None
 
     @computed_field
     def assertions(self) -> Optional[str]:

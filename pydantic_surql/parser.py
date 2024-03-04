@@ -17,14 +17,16 @@ class SurQLParser:
             Rewrite the class to add the new attributes
         """
         schema = Schema.from_pydantic_model(model, name)
+        class Parent(BaseType):
+            is_surql_collection = True
+            surql_table_name = name
+            surql_schema = schema
+            surql_config = config
+
         cls = create_model(
             __model_name= model.__name__,
-            __base__=(BaseType, model),
-            __name__ = model.__name__,
-            __is_surql_collection__ = True,
-            __surql_table_name__ = name,
-            __surql_schema__ = schema,
-            __surql_config__ = config,
+            __base__=(Parent, model),
+            __doc__= model.__doc__,
         )
         return cls
 

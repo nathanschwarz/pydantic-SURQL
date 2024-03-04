@@ -5,7 +5,7 @@ from pydantic_surql.types.utils import SurQLType
 class Base:
     @staticmethod
     def check_record(name: str, field: SchemaField, model: Type[BaseType]):
-        assert model.__surql_table_name__ == field.metas[0].recordLink, f"error record link mismatch expecting {model.__surql_table_name__} got {field.metas[0].recordLink} on {name}"
+        assert model.surql_table_name == field.metas[0].recordLink, f"error record link mismatch expecting {model.surql_table_name} got {field.metas[0].recordLink} on {name}"
 
     @staticmethod
     def check_field(name: str, field: SchemaField, expectedTypes: list[SurQLType]):
