@@ -4,6 +4,8 @@ from pydantic_surql import SurQLParser
 from pydantic_surql.types import SurQLNullable, SurQLTableConfig, SurQLView
 from pydantic import BaseModel, ConfigDict
 
+from pydantic_surql.types.table import SurQLTable
+
 Parser = SurQLParser()
 class TableModel(BaseModel):
     name: str
@@ -22,9 +24,10 @@ def test_strict_schemafull_table():
     """
     name = "test_table"
     #mandatory to mark the child table object as a collection inÒternally
-    table = Parser.from_model(name, TableModel, SurQLTableConfig(strict=True))
-    assert table.name == name
-    assert table._table_def() == "DEFINE TABLE %s SCHEMAFULL;" % name
+    model = Parser.from_model(name, TableModel, SurQLTableConfig(strict=True))
+    table = SurQLTable(model=model)
+    assert table.model.__surql_table_name__ == name
+    assert table.definition == "DEFINE TABLE %s SCHEMAFULL;" % name
 
 def test_strict_schemaless_table():
     """
@@ -32,10 +35,11 @@ def test_strict_schemaless_table():
     """
     name = "test_table"
     #mandatory to mark the child table object as a collection internally
-    table = Parser.from_model(name, TableModel, config=SurQLTableConfig(strict=False))
-    assert table.name == name
-    assert TableModel.model_config.get('extra') == "allow"
-    assert table._table_def() == "DEFINE TABLE %s SCHEMALESS;" % name
+    model = Parser.from_model(name, TableModel, config=SurQLTableConfig(strict=False))
+    table = SurQLTable(model=model)
+    assert table.model.__surql_table_name__ == name
+    assert table.model.model_config.get('extra') == "allow"
+    assert table.definition == "DEFINE TABLE %s SCHEMALESS;" % name
 
     # reset the value to avoid side effects on next tests
     TableModel.model_config['extra'] = None
@@ -46,11 +50,12 @@ def test_strict_schemaless_table_with_extra_allow():
     """
     name = "test_table"
     #mandatory to mark the child table object as a collection internally
-    table = Parser.from_model(name, SchemalessTable)
-    assert table.name == name
+    model = Parser.from_model(name, SchemalessTable)
+    table = SurQLTable(model=model)
+    assert table.model.__surql_table_name__ == name
     assert SchemalessTable.model_config.get('extra') == "allow"
-    assert table.config.strict == False, "config.strict must be False"
-    assert table._table_def() == "DEFINE TABLE %s SCHEMALESS;" % name
+    assert table.model.__surql_config__.strict == False, "config.strict must be False"
+    assert table.definition == "DEFINE TABLE %s SCHEMALESS;" % name
 
 def test_table_view():
     """
@@ -60,9 +65,10 @@ def test_table_view():
     view_name = "test_view"
     #mandatory to mark the child table object as a collection internally
     view = SurQLView(select=["name", "age"], from_t=[name], where=["age > 18"], group_by=["name"])
-    table = Parser.from_model(view_name, TableModel, config=SurQLTableConfig(asView=view))
-    assert table.name == view_name
-    assert table._table_def() == "DEFINE TABLE %s AS SELECT name,age FROM %s WHERE age > 18 GROUP BY name;" % (view_name, name)
+    model = Parser.from_model(view_name, TableModel, config=SurQLTableConfig(asView=view))
+    table = SurQLTable(model=model)
+    assert table.model.__surql_table_name__ == view_name
+    assert table.definition == "DEFINE TABLE %s AS SELECT name,age FROM %s WHERE age > 18 GROUP BY name;" % (view_name, name)
 
 def test_table_drop():
     """
@@ -70,9 +76,10 @@ def test_table_drop():
     """
     name = "test_table"
     #mandatory to mark the child table object as a collection internally
-    table = Parser.from_model(name, TableModel, config=SurQLTableConfig(drop=True))
-    assert table.name == name
-    assert table._table_def() == "DEFINE TABLE %s DROP SCHEMAFULL;" % name
+    model = Parser.from_model(name, TableModel, config=SurQLTableConfig(drop=True))
+    table = SurQLTable(model=model)
+    assert table.model.__surql_table_name__ == name
+    assert table.definition == "DEFINE TABLE %s DROP SCHEMAFULL;" % name
 
 def test_table_change_feed():
     """
@@ -81,7 +88,8 @@ def test_table_change_feed():
     name = "test_table"
     changeFeed = "1d"
     #mandatory to mark the child table object as a collection internally
-    table = Parser.from_model(name, TableModel, config=SurQLTableConfig(changeFeed=changeFeed))
-    assert table.name == name
-    assert table._table_def() == "DEFINE TABLE %s SCHEMAFULL CHANGEFEED %s;" % (name, changeFeed)
+    model = Parser.from_model(name, TableModel, config=SurQLTableConfig(changeFeed=changeFeed))
+    table = SurQLTable(model=model)
+    assert table.model.__surql_table_name__ == name
+    assert table.definition == "DEFINE TABLE %s SCHEMAFULL CHANGEFEED %s;" % (name, changeFeed)
 

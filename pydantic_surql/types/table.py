@@ -11,9 +11,9 @@ class SurQLTable(BaseModel):
     model: Type[BaseType]
 
     @computed_field
-    def sdl(self) -> str:
+    def definition(self) -> str:
         """
-            Get the SDL representation of the model
+            Get the table definition
         """
         _def = ["DEFINE TABLE", self.model.__surql_table_name__]
         if (self.model.__surql_config__.asView is not None):
@@ -27,8 +27,14 @@ class SurQLTable(BaseModel):
             _def = [e for e in _def if e is not None]
         if (self.model.__surql_config__.permissions is not None):
             _def.append(self.model.__surql_config__.permissions.SDL())
+        return " ".join(_def) + ";"
 
-        sdl = [" ".join(_def) + ';', self.model.__surql_schema__.sdl]
+    @computed_field
+    def sdl(self) -> str:
+        """
+            Get the SDL representation of the model
+        """
+        sdl = [" ".join(self.definition) + ';', self.model.__surql_schema__.sdl]
         for index in self.model.__surql_config__.indexes:
             sdl.append(index.SDL(self.model.__surql_table_name__))
         for event in self.model.__surql_config__.events:
