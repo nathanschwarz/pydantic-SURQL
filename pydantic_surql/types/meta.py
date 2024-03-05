@@ -55,15 +55,15 @@ class Input(BaseModel):
             type = Input.parse_field_type(field)
             isDiff = type != field.info.annotation
             fields[field.name] = (type, FieldInfo(
-                title=field.name,
-                alias=field.info.alias,
-                description=field.info.description,
-                exemples=isDiff and None or field.info.examples,
                 default=isDiff and None or field.info.default,
                 default_factory=isDiff and None or field.info.default_factory,
+                alias=field.info.alias,
                 alias_priority=field.info.alias_priority,
                 validation_alias=field.info.validation_alias,
                 serialization_alias=field.info.serialization_alias,
+                title=field.name,
+                description=field.info.description,
+                examples=isDiff and None or field.info.examples,
                 exclude=field.info.exclude,
                 discriminator=field.info.discriminator,
                 json_schema_extra=field.info.json_schema_extra,
