@@ -236,7 +236,7 @@ class SchemaField(BaseModel):
             elif (meta.type == SurQLType.RECORD):
                 tree.types.append(meta.type.value % meta.recordLink)
             elif (meta.type == SurQLType.ARRAY or meta.type == SurQLType.SET):
-                _tree = self.definitions[idx].type_tree
+                _tree: TypeTree = self.definitions[idx].type_tree
                 tree.types.append(meta.type.value % _tree.type())
                 tree.definitions.extend(_tree.definitions)
                 tree.isFlexible = tree.isFlexible or _tree.isFlexible
@@ -257,7 +257,7 @@ class SchemaField(BaseModel):
             TODO: handle assertions
         """
         tokens: list[str] = [f"DEFINE FIELD {self.field_path} ON TABLE {self.table}"]
-        tree = self.type_tree
+        tree: TypeTree = self.type_tree
         tokens.append("FLEXIBLE TYPE" if tree.isFlexible else "TYPE")
         tokens.append(tree.type())
         if (self.perms is not None):
