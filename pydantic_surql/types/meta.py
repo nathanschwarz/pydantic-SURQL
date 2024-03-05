@@ -10,11 +10,18 @@ from pydantic_surql.types.utils import SurQLAnyRecord, SurQLNullable, is_union, 
 from pydantic_surql.types.fieldInfo import SurQLFieldInfo
 from pydantic_surql.types.permissions import SurQLPermissions
 
+class Input(BaseModel):
+    """
+        A simple input definition
+    """
+    pass
+
 class BaseType(BaseModel):
     is_surql_collection: ClassVar[bool]
     surql_table_name: ClassVar[str]
     surql_schema: ClassVar[Schema]
     surql_config: ClassVar[SurQLTableConfig]
+    input: ClassVar[Type[Input]]
 
 class Schema(BaseModel):
     """
@@ -29,9 +36,10 @@ class Schema(BaseModel):
         """
         fields = []
         for field_name, field in model.model_fields.items():
-            fieldName = name + '.' + field_name if name is not None else field_name
-            _field = SchemaField.from_type(fieldName, field.annotation)
-            fields.append(_field)
+            if (field_name != "id"):
+                fieldName = name + '.' + field_name if name is not None else field_name
+                _field = SchemaField.from_type(fieldName, field.annotation)
+                fields.append(_field)
         schema = Schema(fields=fields)
         return schema
 
@@ -41,7 +49,6 @@ class Schema(BaseModel):
             Get the SDL representation of the schema
         """
         return "\n".join([field.sdl for field in self.fields])
-
 
 class MetaType(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
