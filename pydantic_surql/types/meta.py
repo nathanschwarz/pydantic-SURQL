@@ -4,11 +4,10 @@ from enum import Enum
 from types import GenericAlias, NoneType
 from typing import Any, ClassVar, Optional, Type, get_args
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, computed_field
-from pydantic_surql.cache import Cache
 from pydantic_surql.types.config import SurQLTableConfig
 
-from pydantic_surql.types.utils import SurQLAnyRecord, SurQLNullable, is_union
-from pydantic_surql.types.field import SurQLFieldInfo, SurQLType
+from pydantic_surql.types.utils import SurQLAnyRecord, SurQLNullable, is_union, SurQLType
+from pydantic_surql.types.fieldInfo import SurQLFieldInfo
 from pydantic_surql.types.permissions import SurQLPermissions
 
 class BaseType(BaseModel):

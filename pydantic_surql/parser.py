@@ -1,4 +1,4 @@
-from typing import Type, Union
+from typing import Type
 from pydantic import BaseModel, create_model
 from pydantic_surql.types.meta import BaseType, Schema, SchemaField
 
