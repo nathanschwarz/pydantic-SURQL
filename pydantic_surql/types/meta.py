@@ -37,8 +37,8 @@ class Schema(BaseModel):
         fields = []
         for field_name, field in model.model_fields.items():
             if (field_name != "id"):
-                fieldName = name + '.' + field_name if name is not None else field_name
-                _field = SchemaField.from_type(fieldName, field.annotation)
+                path = name + '.' + field_name if name is not None else field_name
+                _field = SchemaField.from_type(field_name, path, field.annotation)
                 fields.append(_field)
         schema = Schema(fields=fields)
         return schema
@@ -171,12 +171,13 @@ class SchemaField(BaseModel):
     """
         A simple schema field definition
     """
-    name: str
+    name: str | None
+    path: str
     metas: list[MetaType] = Field(min_length=1)
     definitions: list[Schema | SchemaField] = []
 
     @staticmethod
-    def from_type(name: str, type: Type) -> SchemaField:
+    def from_type(name: str, path: str, type: Type) -> SchemaField:
         """
             Create a schema field from a type
         """
@@ -190,11 +191,11 @@ class SchemaField(BaseModel):
         for meta in metas:
             if (meta.hasDefinition):
                 if (meta.type == SurQLType.OBJECT):
-                    definitions.append(Schema.from_pydantic_model(type, name))
+                    definitions.append(Schema.from_pydantic_model(type, path))
                 else:
                     # is a list or set
-                    definitions.append(SchemaField.from_type(f"{name}.*", meta.subType))
-        return SchemaField(name=name, metas=metas, definitions=definitions)
+                    definitions.append(SchemaField.from_type(None, f"{path}.*", meta.subType))
+        return SchemaField(name=name, path=path, metas=metas, definitions=definitions)
 
     @computed_field
     def perms(self) -> Optional[SurQLPermissions]:
@@ -220,16 +221,16 @@ class SchemaField(BaseModel):
     @computed_field
     def table(self) -> str:
         """
-            Get the table name of the field
+            Get the table name of the field paths
         """
-        return self.name.split('.')[0]
+        return self.path.split('.')[0]
 
     @computed_field
     def field_path(self) -> str:
         """
-            Get the field path
+            Get the field path (without the table name)
         """
-        return self.name.replace(self.table + '.', '', 1)
+        return self.path.replace(self.table + '.', '', 1)
 
     @computed_field
     def type_tree(self) -> TypeTree:
