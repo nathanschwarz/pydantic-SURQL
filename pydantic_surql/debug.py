@@ -1,9 +1,9 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from pydantic_surql import surql_collection
 from .types.table import SurQLTable
 
 class Person(BaseModel):
-    firstname: str
+    firstname: str = Field(..., description="The first name of the person")
     lastname: str
     age: int
     links: list[str]

@@ -1,11 +1,14 @@
 from __future__ import annotations
+from functools import reduce
 from datetime import datetime
 from enum import Enum
 from types import GenericAlias, NoneType
-from typing import Any, ClassVar, Optional, Type, get_args
-from pydantic import BaseModel, ConfigDict, Field, field_serializer, computed_field
-from pydantic_surql.types.config import SurQLTableConfig
+from typing import Any, ClassVar, Optional, Type, Union, get_args
 
+from pydantic import BaseModel, ConfigDict, Field, create_model, field_serializer, computed_field
+from pydantic.fields import FieldInfo
+
+from pydantic_surql.types.config import SurQLTableConfig
 from pydantic_surql.types.utils import SurQLAnyRecord, SurQLNullable, is_union, SurQLType
 from pydantic_surql.types.fieldInfo import SurQLFieldInfo
 from pydantic_surql.types.permissions import SurQLPermissions
@@ -14,7 +17,71 @@ class Input(BaseModel):
     """
         A simple input definition
     """
-    pass
+    @staticmethod
+    def parse_field_type(field: SchemaField):
+        types = []
+        isOptional = False
+        for idx, meta in enumerate(field.metas):
+            if (meta.type == SurQLType.SET):
+                types.append(set[Input.parse_field_type(field.definitions[idx])])
+            elif (meta.type == SurQLType.ARRAY):
+                types.append(list[Input.parse_field_type(field.definitions[idx])])
+            elif (meta.type == SurQLType.RECORD):
+                types.append(str)
+            elif (meta.type == SurQLType.OBJECT):
+                types.append(Input.from_schema(field.definitions[idx], field.definitions[idx].name))
+            elif (meta.type == SurQLType.NULL):
+                types.append(NoneType)
+            elif (meta.type == SurQLType.OPTIONAL):
+                isOptional = True
+            else:
+                # int | float | str | bool | datetime | Enum | Any
+                types.append(meta.original)
+        if (len(types) > 1):
+            types = reduce(lambda x, y: x | y, types)
+        else:
+            types = types[0]
+        if (isOptional):
+            return Optional[types]
+        return types
+
+    @staticmethod
+    def from_schema(schema: Schema, model_name: str) -> Type[Input]:
+        """
+            Create an input from a schema
+        """
+        fields = {}
+        for field in schema.fields:
+            type = Input.parse_field_type(field)
+            isDiff = type != field.info.annotation
+            fields[field.name] = (type, FieldInfo(
+                title=field.name,
+                alias=field.info.alias,
+                description=field.info.description,
+                exemples=isDiff and None or field.info.examples,
+                default=isDiff and None or field.info.default,
+                default_factory=isDiff and None or field.info.default_factory,
+                alias_priority=field.info.alias_priority,
+                validation_alias=field.info.validation_alias,
+                serialization_alias=field.info.serialization_alias,
+                exclude=field.info.exclude,
+                discriminator=field.info.discriminator,
+                json_schema_extra=field.info.json_schema_extra,
+                frozen=field.info.frozen,
+                validate_default=field.info.validate_default,
+                repr=field.info.repr,
+                init_var=field.info.init_var,
+                kw_only=field.info.kw_only,
+                metadata=field.info.metadata
+            ))
+        input = create_model(
+            __model_name= model_name + "Input",
+            __base__=(Input),
+            __doc__=f"Input for the model {model_name}",
+            model_config = ConfigDict(extra=schema.isFlexible and 'allow' or 'forbid'),
+            **fields
+        )
+        return input
 
 class BaseType(BaseModel):
     is_surql_collection: ClassVar[bool]
@@ -28,6 +95,8 @@ class Schema(BaseModel):
         A simple schema definition
     """
     fields: list[SchemaField]
+    name: str
+    isFlexible: bool = False
 
     @staticmethod
     def from_pydantic_model(model: BaseType, name: str) -> Schema:
@@ -35,12 +104,13 @@ class Schema(BaseModel):
             Create a schema from a pydantic model
         """
         fields = []
+        isFlexible = model.model_config.get('extra') == 'allow'
         for field_name, field in model.model_fields.items():
             if (field_name != "id"):
                 path = name + '.' + field_name if name is not None else field_name
-                _field = SchemaField.from_type(field_name, path, field.annotation)
+                _field = SchemaField.from_type(field_name, path, field.annotation, field)
                 fields.append(_field)
-        schema = Schema(fields=fields)
+        schema = Schema(fields=fields, isFlexible=isFlexible, name=model.__qualname__)
         return schema
 
     @computed_field
@@ -171,13 +241,15 @@ class SchemaField(BaseModel):
     """
         A simple schema field definition
     """
+    model_config = ConfigDict(arbitrary_types_allowed=True)
     name: str | None
     path: str
     metas: list[MetaType] = Field(min_length=1)
     definitions: list[Schema | SchemaField] = []
+    info: FieldInfo | Type[FieldInfo] | None = None
 
     @staticmethod
-    def from_type(name: str, path: str, type: Type) -> SchemaField:
+    def from_type(name: str, path: str, type: Type, field: FieldInfo | Type[FieldInfo] | None = None) -> SchemaField:
         """
             Create a schema field from a type
         """
@@ -195,7 +267,7 @@ class SchemaField(BaseModel):
                 else:
                     # is a list or set
                     definitions.append(SchemaField.from_type(None, f"{path}.*", meta.subType))
-        return SchemaField(name=name, path=path, metas=metas, definitions=definitions)
+        return SchemaField(name=name, path=path, metas=metas, definitions=definitions, info=field)
 
     @computed_field
     def perms(self) -> Optional[SurQLPermissions]:

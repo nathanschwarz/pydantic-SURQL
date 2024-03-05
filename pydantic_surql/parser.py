@@ -1,6 +1,6 @@
 from typing import Type
 from pydantic import BaseModel, create_model
-from pydantic_surql.types.meta import BaseType, Schema, SchemaField
+from pydantic_surql.types.meta import BaseType, Schema, SchemaField, Input
 
 from .cache import Cache
 from .types import SurQLTableConfig
@@ -17,11 +17,13 @@ class SurQLParser:
             Rewrite the class to add the new attributes
         """
         schema = Schema.from_pydantic_model(model, name)
+        input = Input.from_schema(schema, name)
         class Parent(BaseType):
             is_surql_collection = True
             surql_table_name = name
             surql_schema = schema
             surql_config = config
+            input = input
 
         cls = create_model(
             __model_name= model.__name__,
