@@ -26,7 +26,7 @@ class Input(BaseModel):
                 types.append(set[Input.parse_field_type(field.definitions[idx])])
             elif (meta.type == SurQLType.ARRAY):
                 types.append(list[Input.parse_field_type(field.definitions[idx])])
-            elif (meta.type == SurQLType.RECORD):
+            elif (meta.type == SurQLType.RECORD or meta.type == SurQLType.ANY_RECORD):
                 types.append(str)
             elif (meta.type == SurQLType.OBJECT):
                 types.append(Input.from_schema(field.definitions[idx], field.definitions[idx].name))
